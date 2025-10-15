@@ -1,0 +1,10 @@
+{
+  "is-main": true,
+  "import": [
+    "moonbitlang/async/io",
+    "moonbitlang/async/fs",
+    "moonbitlang/async",
+    "moonbitlang/MiniMoonbit/lexer",
+    "moonbitlang/MiniMoonbit/parser"
+  ]
+}

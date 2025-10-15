@@ -1,4 +1,4 @@
-
+///|
 pub(all) struct Param {
   name : String
   ty : Type
@@ -20,11 +20,10 @@ pub fn parse_param(
   ...
 }
 
-
+///|
 pub fn parse_top_function(
   tokens : ArrayView[Token],
 ) -> (TopFunction, ArrayView[Token]) raise ParseError {
   ignore(tokens)
   ...
 }
-

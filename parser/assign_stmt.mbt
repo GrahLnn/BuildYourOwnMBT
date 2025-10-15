@@ -15,7 +15,8 @@ pub(all) enum AssignOp {
   ModAssign // %=
 } derive(Show, Eq)
 
-fn AssignOp::from_tok_assign_op(op: @lexer.AssignOp) -> AssignOp {
+///|
+fn AssignOp::from_tok_assign_op(op : @lexer.AssignOp) -> AssignOp {
   match op {
     Assign => Assign
     PlusAssign => PlusAssign
@@ -26,6 +27,7 @@ fn AssignOp::from_tok_assign_op(op: @lexer.AssignOp) -> AssignOp {
   }
 }
 
+///|
 pub fn parse_assign_stmt(
   tokens : ArrayView[Token],
 ) -> (AssignStmt, ArrayView[Token]) raise ParseError {
@@ -33,4 +35,3 @@ pub fn parse_assign_stmt(
   ignore(tokens)
   ...
 }
-
