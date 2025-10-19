@@ -8,10 +8,6 @@ pub(all) enum TypeKind {
   Unit
   Bool
   Int
-  Int64
-  UInt
-  UInt64
-  Float
   Double
   String
   Tuple(Array[TypeKind])
@@ -34,10 +30,6 @@ pub impl Show for TypeKind with output(self, logger) {
     Unit => "Unit"
     Bool => "Bool"
     Int => "Int"
-    Int64 => "Int64"
-    UInt => "UInt"
-    UInt64 => "UInt64"
-    Float => "Float"
     Double => "Double"
     String => "String"
     Tuple(tys) => {
