@@ -1,6 +1,7 @@
 ///|
 pub(all) struct KnfBlock {
   stmts : Array[KnfStmt]
+  ty : Type
 }
 
 ///|

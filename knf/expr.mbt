@@ -16,7 +16,7 @@ pub(all) enum KnfExpr {
   FieldAccess(Name, String)
   TupleAccess(Name, Int)
   CreateStruct(String, Array[(String, Name)])
-  ArrayLiteral(Array[Name])
+  ArrayLiteral(Type, Array[Name])
   ArrayMake(Name, Name)
   TupleLiteral(Array[Name])
 }
@@ -122,9 +122,9 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
       let init_strs = init_arr.map(field => "\{field.0}: \{field.1}").join(", ")
       "\{struct_name}::{\{init_strs}}"
     }
-    ArrayLiteral(elem_names) => {
+    ArrayLiteral(ty, elem_names) => {
       let elems_strs = elem_names.map(elem => elem.to_string()).join(", ")
-      "[\{elems_strs}]"
+      "[\{elems_strs}]::Array[\{ty}]"
     }
     ArrayMake(size_name, init_name) => "array_make(\{size_name}, \{init_name})"
     TupleLiteral(elem_names) => {

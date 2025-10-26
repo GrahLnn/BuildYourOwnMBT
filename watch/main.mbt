@@ -21,7 +21,20 @@ let challenge_names = [
   "typecheck_top_let_test", "typecheck_let_stmt_test", "typecheck_assign_stmt_test",
   "typecheck_block_expr_test", "typecheck_expr_test", "typecheck_if_expr_test", "typecheck_while_stmt_test",
   "typecheck_local_func_test", "typecheck_struct_construct_test", "typecheck_top_func_test",
-  "typecheck_program_test",
+  "typecheck_program_test", "typechecker_test",
+  // Knf
+   "knf_type_trans_test", "knf_simple_atom_trans_test", "knf_simple_apply_trans_test",
+  "knf_simple_expr_trans_test", "knf_atom_trans_test", "knf_apply_trans_test", "knf_expr_trans_test",
+  "knf_let_mut_trans_test", "knf_let_stmt_trans_test", "knf_assign_stmt_trans_test",
+  "knf_stmt_trans_test", "knf_block_expr_trans_test", "knf_if_expr_trans_test", "knf_while_stmt_trans_test",
+  "knf_top_let_trans_test", "knf_struct_def_trans_test", "knf_top_func_trans_test",
+  "knf_local_func_trans_test", "knf_program_trans_test",
+  // Codegen
+   "codegen_demo_func_test", "codegen_demo_struct_test", "codegen_empty_top_func_test",
+  "codegen_simple_top_func_test", "codegen_simple_let_test", "codegen_binary_test",
+  "codegen_unary_test", "codegen_assign_test", "codegen_array_make_test", "codegen_array_acc_and_put_test",
+  "codegen_array_expr_test", "codegen_block_test", "codegen_if_expr_test", "codegen_struct_test",
+  "codegen_tuple_test", "codegen_call_test", "codegen_program_test",
 ]
 
 ///|

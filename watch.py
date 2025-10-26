@@ -33,6 +33,12 @@ challenge_names: List[str] = [
     "knf_assign_stmt_trans_test", "knf_stmt_trans_test", "knf_block_expr_trans_test", "knf_if_expr_trans_test",
     "knf_while_stmt_trans_test", "knf_top_let_trans_test", "knf_struct_def_trans_test", "knf_top_func_trans_test",
     "knf_local_func_trans_test", "knf_program_trans_test",
+    # Codegen
+    "codegen_demo_func_test", "codegen_demo_struct_test", "codegen_empty_top_func_test",
+    "codegen_simple_top_func_test", "codegen_simple_let_test", "codegen_binary_test",
+    "codegen_unary_test", "codegen_assign_test", "codegen_array_make_test", "codegen_array_acc_and_put_test",
+    "codegen_array_expr_test", "codegen_block_test", "codegen_if_expr_test", "codegen_struct_test",
+    "codegen_tuple_test", "codegen_call_test", "codegen_program_test",
 ]
 
 

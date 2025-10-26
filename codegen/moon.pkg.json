@@ -1,0 +1,16 @@
+{
+  "import": [
+    "moonbitlang/MiniMoonbit/knf",
+    "Kaida-Amethyst/either",
+    {
+      "path" : "Kaida-Amethyst/MoonLLVM/IR",
+      "alias" : "llvm"
+    },
+  ],
+  "test-import" : [
+    "moonbitlang/MiniMoonbit/lexer",
+    "moonbitlang/MiniMoonbit/parser",
+    "moonbitlang/MiniMoonbit/typecheck",
+  ]
+}
+

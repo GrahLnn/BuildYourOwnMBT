@@ -16,6 +16,20 @@ pub fn Context::struct_def_to_knf(
 }
 
 ///|
+pub fn KnfStructDef::get_field_index(
+  self : KnfStructDef,
+  field_name : String,
+) -> Int? {
+  for i, f in self.fields {
+    let (name, _, _) = f
+    if name == field_name {
+      return Some(i)
+    }
+  }
+  None
+}
+
+///|
 pub impl Show for KnfStructDef with output(self, logger) {
   let { name, fields } = self
   logger.write_string("struct \{name} {\n")
