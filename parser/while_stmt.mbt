@@ -8,6 +8,8 @@ pub(all) struct WhileStmt {
 pub fn parse_while_stmt(
   tokens : ArrayView[Token],
 ) -> (WhileStmt, ArrayView[Token]) raise ParseError {
-  ignore(tokens)
-  ...
+  guard tokens is [{ kind: Keyword(While) }, .. rest]
+  let (cond, rest) = parse_expr(rest)
+  let (body, rest) = parse_block_expr(rest)
+  (WhileStmt::{ cond, body }, rest)
 }

@@ -45,7 +45,71 @@ pub fn Context::check_assign_stmt(
   self : Context,
   assign_stmt : @parser.AssignStmt,
 ) -> AssignStmt raise TypeCheckError {
-  ignore(self)
-  ignore(assign_stmt)
-  raise TypeCheckError("check_assign_stmt not implemented")
+  let left_value = self.check_left_value(assign_stmt.left_value)
+  let op = AssignOp::from_parser_assign_op(assign_stmt.op)
+  let expr = self.check_expr(assign_stmt.expr)
+  match left_value.kind {
+    Ident(name) =>
+      if !self.confirm_type(
+          left_value.ty.kind,
+          expr.ty,
+          name,
+          left_value.ty.mutable,
+        ) {
+        raise TypeCheckError(
+          "Type mismatch in assignment \{name} \{left_value.ty.kind} != \{expr.ty}",
+        )
+      }
+    _ =>
+      if !self.is_type_compatible(left_value.ty.kind, expr.ty) {
+        raise TypeCheckError(
+          "Type mismatch in assignment \{left_value.ty.kind} != \{expr.ty}",
+        )
+      }
+  }
+  match op {
+    Assign => ()
+    PlusAssign | MinusAssign | MultAssign | DivAssign | ModAssign =>
+      if !self.is_type_compatible(expr.ty, Int) &&
+        !self.is_type_compatible(expr.ty, Double) {
+        raise TypeCheckError(
+          "Only numbers can be assigned to variables, found \{expr.ty}",
+        )
+      }
+  }
+  // println(self.type_env.local_)
+  AssignStmt::{ left_value, op, expr }
+}
+
+///|
+pub fn Context::check_left_value(
+  self : Context,
+  left_value : @parser.LeftValue,
+) -> LeftValue raise TypeCheckError {
+  match left_value.kind {
+    Ident(name) => {
+      let ty = self.type_env.get(name).unwrap()
+      match ty.kind {
+        Array(_) => ()
+        _ =>
+          if !ty.mutable {
+            raise TypeCheckError("Cannot assign to immutable variable")
+          }
+      }
+      LeftValue::{ kind: Ident(name), ty }
+    }
+    ArrayAccess(left_value, expr) => {
+      let left_value = self.check_left_value(left_value)
+      let expr = self.check_expr(expr)
+      LeftValue::{
+        kind: ArrayAccess(left_value, expr),
+        ty: Type::{ kind: expr.ty, mutable: true },
+      }
+    }
+    FieldAccess(left_value, name) => {
+      let left_value = self.check_left_value(left_value)
+      let ty = left_value.ty
+      LeftValue::{ kind: FieldAccess(left_value, name), ty }
+    }
+  }
 }

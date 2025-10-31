@@ -58,13 +58,65 @@ fn BinaryOp::from_tok_binary_op(tok_bin_op : @lexer.BinaryOp) -> BinaryOp {
 }
 
 ///|
+fn expr(kind : ExprKind) -> Expr {
+  Expr::{ kind, }
+}
+
+///|
+fn tok_prec(op_tok : @lexer.BinaryOp) -> Int {
+  BinaryOp::from_tok_binary_op(op_tok).precedence()
+}
+
+///|
+fn parse_tail(
+  lhs : Expr,
+  rest : ArrayView[Token],
+  min_bp : Int,
+) -> (Expr, ArrayView[Token]) raise ParseError {
+  match rest {
+    [{ kind: BinaryOp(op_tok) }, .. r2] => {
+      let bp = tok_prec(op_tok)
+      if bp < min_bp {
+        (lhs, rest)
+      } else {
+        let (rhs, r3) = parse_expr(r2, min_bp=bp + 1)
+        let op = BinaryOp::from_tok_binary_op(op_tok)
+        let lhs2 = expr(BinaryExpr(op, lhs, rhs))
+        parse_tail(lhs2, r3, min_bp)
+      }
+    }
+    _ => (lhs, rest)
+  }
+}
+
+///|
 pub fn parse_expr(
   tokens : ArrayView[Token],
+  min_bp? : Int = 0,
 ) -> (Expr, ArrayView[Token]) raise ParseError {
-  ignore(tokens)
-  ignore(BinaryOp::from_tok_binary_op)
-  ignore(BinaryOp::precedence)
-  ...
+  let (lhs0, rest0) = match tokens {
+    [{ kind: Keyword(If) }, ..] as tks => {
+      let (e, r) = parse_if_expr(tks)
+      (expr(IfExpr(e)), r)
+    }
+    [{ kind: Bracket('{') }, ..] as tks => {
+      let (e, r) = parse_block_expr(tks)
+      (expr(BlockExpr(e)), r)
+    }
+    [{ kind: Not }, .. r] => {
+      let (e, r2) = parse_expr(r)
+      (expr(NotExpr(e)), r2)
+    }
+    [{ kind: BinaryOp(Sub) }, .. r] => {
+      let (e, r2) = parse_expr(r)
+      (expr(NegExpr(e)), r2)
+    }
+    _ => {
+      let (ap, r) = parse_apply_expr(tokens)
+      (expr(ApplyExpr(ap)), r)
+    }
+  }
+  parse_tail(lhs0, rest0, min_bp)
 }
 
 ///|

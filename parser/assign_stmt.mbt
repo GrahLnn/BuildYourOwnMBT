@@ -31,7 +31,15 @@ fn AssignOp::from_tok_assign_op(op : @lexer.AssignOp) -> AssignOp {
 pub fn parse_assign_stmt(
   tokens : ArrayView[Token],
 ) -> (AssignStmt, ArrayView[Token]) raise ParseError {
-  ignore(AssignOp::from_tok_assign_op)
-  ignore(tokens)
-  ...
+  let (left_value, tokens) = parse_left_value(tokens)
+  let (op, tokens) = match tokens {
+    [{ kind: AssignOp(op) }, .. tokens] =>
+      (AssignOp::from_tok_assign_op(op), tokens)
+    _ => raise ParseError("Expected assignment operator")
+  }
+  let (expr, tokens) = parse_expr(tokens)
+  guard tokens is [{ kind: Symbol(";") }, .. tokens] else {
+    raise ParseError("Expected semicolon")
+  }
+  (AssignStmt::{ left_value, op, expr }, tokens)
 }

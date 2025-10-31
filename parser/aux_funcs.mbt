@@ -1,5 +1,5 @@
 ///|
-typealias @lexer.Token
+using @lexer {type Token}
 
 ///|
 pub suberror ParseError String derive(Show)

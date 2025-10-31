@@ -1,5 +1,5 @@
 ///|
-typealias @either.Either
+using @either {type Either}
 
 ///|
 pub(all) suberror TypeCheckError String derive(Show)
@@ -54,9 +54,7 @@ pub fn Context::new() -> Context {
 
 ///|
 pub fn Context::lookup_type(self : Context, name : String) -> Type? {
-  ignore(self)
-  ignore(name)
-  None
+  self.type_env.get(name)
 }
 
 ///|

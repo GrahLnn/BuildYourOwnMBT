@@ -8,8 +8,11 @@ pub(all) struct StructConstructExpr {
 pub fn Context::check_struct_construct_expr(
   self : Self,
   sc_expr : @parser.StructConstructExpr,
-) -> (AtomExprKind, TypeKind) raise TypeCheckError {
-  ignore(self)
-  ignore(sc_expr)
-  raise TypeCheckError("check_struct_construct_expr not implemented")
+) -> (StructConstructExpr, TypeKind) raise TypeCheckError {
+  let fields = sc_expr.fields.map(fields => {
+    let (name, expr) = fields
+    (name, self.check_expr(expr))
+  })
+  let name = sc_expr.name
+  (StructConstructExpr::{ name, fields }, Struct(name))
 }

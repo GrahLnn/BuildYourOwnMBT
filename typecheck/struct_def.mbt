@@ -25,7 +25,10 @@ pub fn Context::check_struct_def(
   self : Self,
   struct_def : @parser.StructDef,
 ) -> StructDef raise TypeCheckError {
-  ignore(self)
-  ignore(struct_def)
-  raise TypeCheckError("check_struct_def not implemented")
+  let name = struct_def.name
+  let fields = struct_def.fields.map(field => StructField::{
+    name: field.name,
+    ty: self.check_parser_type(field.ty, mutable=field.is_mut),
+  })
+  StructDef::{ name, fields }
 }

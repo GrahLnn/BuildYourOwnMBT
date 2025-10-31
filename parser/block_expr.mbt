@@ -7,6 +7,14 @@ pub(all) struct BlockExpr {
 pub fn parse_block_expr(
   tokens : ArrayView[Token],
 ) -> (BlockExpr, ArrayView[Token]) raise ParseError {
-  ignore(tokens)
-  ...
+  guard tokens is [{ kind: Bracket('{') }, .. rest]
+  let items = Array::new()
+  loop rest {
+    [{ kind: Bracket('}') }, .. r] => break (BlockExpr::{ stmts: items }, r)
+    _ as rest => {
+      let (s, r) = parse_stmt(rest)
+      items.push(s)
+      continue r
+    }
+  }
 }

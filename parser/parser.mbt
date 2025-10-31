@@ -12,21 +12,23 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
   let struct_defs = Map::new()
   loop tokens[:] {
     [{ kind: Keyword(Fn) }, ..] as tokens => {
-      ...
-      continue tokens[1:]
+      let (top_fn, rest) = parse_top_function(tokens)
+      top_functions.set(top_fn.fname, top_fn)
+      continue rest
     }
     [{ kind: Keyword(Let) }, ..] as tokens => {
-      ...
-      continue tokens[1:]
+      let (top_let, rest) = parse_top_let(tokens)
+      top_lets.set(top_let.name, top_let)
+      continue rest
     }
     [{ kind: Keyword(Struct) }, ..] as tokens => {
-      ...
-      continue tokens[1:]
+      let (struct_def, rest) = parse_struct_def(tokens)
+      struct_defs.set(struct_def.name, struct_def)
+      continue rest
     }
     [{ kind: EOF }, ..] => break
     [] => panic()
     tokens => raise ParseError("Unexpected token in top level: \{tokens[0]}")
   }
-  let prog = Program::{ top_lets, top_functions, struct_defs }
-  prog
+  Program::{ top_lets, top_functions, struct_defs }
 }
