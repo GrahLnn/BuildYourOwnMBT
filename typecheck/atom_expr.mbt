@@ -69,7 +69,7 @@ pub fn Context::check_atom_expr(
           Some(y) =>
             loop exprs[:] {
               [ex, .. rest] => {
-                let name = self.has_ident(ex)
+                let name = has_ident(ex)
                 let check = match name {
                   Some(name) => {
                     let ty = self.lookup_type(name).unwrap()

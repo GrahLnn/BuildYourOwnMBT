@@ -91,7 +91,7 @@ pub fn parser_binop_to_typecheck_binop(
 }
 
 ///|
-pub fn Context::has_ident(self : Self, expr : Expr) -> String? {
+pub fn has_ident(expr : Expr) -> String? {
   match expr.kind {
     ApplyExpr(e) =>
       match e.kind {
