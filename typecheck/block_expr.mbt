@@ -10,23 +10,30 @@ pub fn Context::check_block_expr(
   block_expr : @parser.BlockExpr,
 ) -> BlockExpr raise TypeCheckError {
   self.enter_scope()
-  println("typevar start: \{self.type_vars}")
   let stmts = block_expr.stmts.map(s => self.check_stmt(s))
   let ty = match stmts.last() {
     None => TypeKind::Unit
     Some(stmt) =>
       match stmt.kind {
-        ExprStmt(expr) => expr.ty
+        ExprStmt(expr) => self.analysis_type(expr.ty)
         ReturnStmt(expr) =>
           match expr {
-            Some(expr) => expr.ty
+            Some(expr) => self.analysis_type(expr.ty)
             None => TypeKind::Unit
           }
         _ => TypeKind::Unit
       }
   }
-  println("typevar end: \{self.type_vars}")
-  self.type_vars.clear()
   self.exit_scope()
+  BlockExpr::{ stmts, ty }
+}
+
+///|
+pub fn Context::substitute_block_expr(
+  self : Context,
+  block_expr : BlockExpr,
+) -> BlockExpr raise TypeCheckError {
+  let stmts = block_expr.stmts.map(s => self.substitute_stmt(s))
+  let ty = self.analysis_type(block_expr.ty)
   BlockExpr::{ stmts, ty }
 }

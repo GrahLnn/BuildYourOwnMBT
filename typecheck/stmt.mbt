@@ -32,6 +32,23 @@ pub fn Context::check_stmt(
 }
 
 ///|
+pub fn Context::substitute_stmt(
+  self : Context,
+  stmt : Stmt,
+) -> Stmt raise TypeCheckError {
+  let kind = match stmt.kind {
+    LetStmt(s) => LetStmt(self.substitute_let_stmt(s))
+    LetMutStmt(s) => LetMutStmt(self.substitute_let_mut_stmt(s))
+    AssignStmt(s) => AssignStmt(self.substitute_assign_stmt(s))
+    WhileStmt(s) => WhileStmt(self.substitute_while_stmt(s))
+    ExprStmt(s) => ExprStmt(self.substitute_expr(s))
+    ReturnStmt(s) => ReturnStmt(self.substitute_return(s))
+    LocalFunction(s) => LocalFunction(self.substitute_local_function(s))
+  }
+  Stmt::{ kind, }
+}
+
+///|
 fn Context::check_return(
   self : Context,
   stmt : @parser.Expr?,
@@ -63,5 +80,16 @@ fn Context::check_return(
       }
       Some(expr)
     }
+  }
+}
+
+///|
+fn Context::substitute_return(
+  self : Context,
+  stmt : Expr?,
+) -> Expr? raise TypeCheckError {
+  match stmt {
+    None => stmt
+    Some(s) => Some(self.substitute_expr(s))
   }
 }

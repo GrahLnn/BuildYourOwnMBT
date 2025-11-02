@@ -1,0 +1,65 @@
+/// ================================================================================
+/// # 类型检查：结构体构造
+///
+/// 我们已经可以定义结构体了，现在我们需要检查它的**构造（Construction）**过程。
+/// 类型检查器必须确保我们用于构造结构体的字段名和值的类型都是正确的。
+///
+/// ## 🎯 你的任务：实现 `check_struct_construct_expr`
+///
+/// 你的任务是在 `typecheck/struct_construct_expr.mbt` 文件中实现 `Context::check_struct_construct_expr` 函数。
+///
+/// 这个函数在 `check_atom_expr` 内部被调用，当遇到 `StructName::{...}` 语法时触发。
+///
+/// ### 💡 实现思路
+///
+/// 检查 `MyStruct::{ field1: value1, ... }` 的逻辑如下：
+///
+/// 1.  **查找结构体定义：**
+///     *   从 `Context` 的 `struct_defs` 表中，根据名字 `MyStruct` 查找到它的定义。如果找不到，说明该结构体未定义，应抛出错误。
+///
+/// 2.  **遍历并检查所有字段：**
+///     *   遍历构造表达式中提供的每一个 `field: value` 对。
+///     *   对于每个字段，首先检查结构体定义中是否存在同名字段。如果不存在，抛出错误。
+///     *   调用 `check_expr` 检查 `value` 的类型。
+///     *   使用 `is_type_compatible` 验证 `value` 的类型是否与结构体定义中该字段的类型相匹配。如果不匹配，抛出错误。
+///
+/// 3.  **检查字段完整性：**
+///     *   一个完整的实现还需要检查，构造表达式中提供的字段是否包含了结构体定义中所有未声明为可选的字段。
+///     *   为了简化，在我们的 MiniMoonBit 中，我们要求构造时必须提供所有字段。你可以通过比较构造表达式中的字段数量和定义中的字段数量来做一个简单的检查。
+///
+/// 4.  **确定表达式类型：**
+///     *   如果所有检查都通过，那么整个构造表达式的类型就是该结构体本身的类型，即 `TypeKind::Struct("MyStruct")`。
+///
+/// ---
+///
+/// **阶段性测试：**
+///
+/// ```bash
+/// moon test -p typecheck -f typecheck_struct_construct_test.mbt
+/// ```
+/// ================================================================================
+
+///|
+test "Struct Construct TypeCheck Test" {
+  let code =
+    #|struct Point { x: Int; y: Int; }
+    #|let p1 = Point::{ x: 1, y: 2 };
+    #|let p2 = Point::{ x: 1, y: true };
+  let tokens = @lexer.tokenize(code)
+  let ctx = Context::new()
+
+  // 1. Parse and check the struct definition to populate the context
+  let (struct_def, tok_view1) = @parser.parse_struct_def(tokens)
+  let _ = ctx.check_struct_def(struct_def) // Assumes check_struct_def works
+
+  // 2. Parse and check the valid `let p1 = ...` statement
+  let (let_stmt1, tok_view2) = @parser.parse_let_stmt(tok_view1)
+  let _ = ctx.check_let_stmt(let_stmt1)
+  let p1_type = ctx.lookup_type("p1")
+  assert_true(p1_type is Some({ kind: Struct("Point"), .. }))
+
+  // 3. Parse and check the invalid `let p2 = ...` statement
+  let (let_stmt2, _) = @parser.parse_let_stmt(tok_view2)
+  let result = try? ctx.check_let_stmt(let_stmt2)
+  assert_true(result is Err(_))
+}

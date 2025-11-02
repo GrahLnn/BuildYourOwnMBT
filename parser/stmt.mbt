@@ -33,6 +33,14 @@ pub fn parse_stmt(
       let (s, r) = parse_let_stmt(tks)
       stmt((LetStmt(s), r))
     }
+    [{ kind: Keyword(While) }, ..] as tks => {
+      let (s, r) = parse_while_stmt(tks)
+      stmt((WhileStmt(s), r))
+    }
+    [{ kind: Keyword(Fn) }, ..] as tks => {
+      let (s, r) = parse_local_function(tks)
+      stmt((LocalFunction(s), r))
+    }
     [{ kind: Keyword(Return) }, .. rest] =>
       match rest {
         [{ kind: Symbol(";") }, .. r] => stmt((ReturnStmt(None), r))

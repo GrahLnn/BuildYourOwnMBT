@@ -116,11 +116,19 @@ pub fn Context::check_expr(
       let expr = self.check_apply_expr(apply_expr)
       Expr::{ kind: ApplyExpr(expr), ty: expr.ty }
     }
+    IfExpr(if_expr) => {
+      let expr = self.check_if_expr(if_expr)
+      Expr::{ kind: IfExpr(expr), ty: expr.ty }
+    }
+    BlockExpr(block_expr) => {
+      let expr = self.check_block_expr(block_expr)
+      Expr::{ kind: BlockExpr(expr), ty: expr.ty }
+    }
     NotExpr(inner_expr) => {
       let expr = self.check_expr(inner_expr)
       guard expr.ty is Bool else {
         raise TypeCheckError(
-          "! can only be paired with Boolean-type statements. ",
+          "! can only be paired with Boolean-type statements. Found \{expr.ty}",
         )
       }
       Expr::{ kind: NotExpr(expr), ty: Bool }
@@ -129,7 +137,7 @@ pub fn Context::check_expr(
       let expr = self.check_expr(inner_expr)
       guard expr.ty is Int || expr.ty is Double else {
         raise TypeCheckError(
-          "- can only be paired with integer and double-type statements. ",
+          "- can only be paired with integer and double-type statements. Found \{expr.ty}",
         )
       }
       Expr::{ kind: NegExpr(expr), ty: expr.ty }
@@ -138,67 +146,81 @@ pub fn Context::check_expr(
       let lexpr = self.check_expr(left)
       let rexpr = self.check_expr(right)
       guard self.is_type_compatible(lexpr.ty, rexpr.ty) else {
-        raise TypeCheckError("The types on both sides must be identical.")
+        raise TypeCheckError(
+          "The types on both sides must be identical. Found \{lexpr.ty} and \{rexpr.ty}",
+        )
       }
       match op {
-        Add | Sub | Mul | Div | Mod => {
-          guard lexpr.ty is Int || lexpr.ty is Double else {
-            raise TypeCheckError(
-              "Arithmetic operations are only allowed on integers and doubles.",
-            )
-          }
+        Add | Sub | Mul | Div | Mod =>
           Expr::{
             kind: BinaryExpr(parser_binop_to_typecheck_binop(op), lexpr, rexpr),
             ty: lexpr.ty,
           }
-        }
-        Eq | NE => {
-          guard lexpr.ty is Int || lexpr.ty is Double || lexpr.ty is Bool else {
-            raise TypeCheckError(
-              "Comparison operations are only allowed on integers, doubles, and booleans.",
-            )
-          }
+        Eq | NE =>
           Expr::{
             kind: BinaryExpr(parser_binop_to_typecheck_binop(op), lexpr, rexpr),
             ty: Bool,
           }
-        }
-        LT | GT | LE | GE => {
-          guard lexpr.ty is Int || lexpr.ty is Double else {
-            raise TypeCheckError(
-              "Comparison operations are only allowed on integers and doubles.",
-            )
-          }
+        LT | GT | LE | GE =>
           Expr::{
             kind: BinaryExpr(parser_binop_to_typecheck_binop(op), lexpr, rexpr),
             ty: Bool,
           }
-        }
-        And | Or => {
-          guard lexpr.ty is Bool && rexpr.ty is Bool else {
-            raise TypeCheckError(
-              "Logical operations are only allowed on boolean-type statements.",
-            )
-          }
+        And | Or =>
           Expr::{
             kind: BinaryExpr(parser_binop_to_typecheck_binop(op), lexpr, rexpr),
             ty: Bool,
           }
-        }
-        BitAnd | BitOr => {
-          guard lexpr.ty is Int && rexpr.ty is Int else {
-            raise TypeCheckError(
-              "Bitwise operations are only allowed on integer-type statements.",
-            )
-          }
+        BitAnd | BitOr =>
           Expr::{
             kind: BinaryExpr(parser_binop_to_typecheck_binop(op), lexpr, rexpr),
             ty: Int,
           }
-        }
-        _ => raise TypeCheckError("check_expr not implemented")
+        _ => raise TypeCheckError("check BinaryOp \{op} not implemented")
       }
     }
-    _ => raise TypeCheckError("check_expr not implemented")
+  }
+}
+
+///|
+fn Context::substitute_expr(
+  self : Context,
+  expr : Expr,
+) -> Expr raise TypeCheckError {
+  match expr.kind {
+    ApplyExpr(apply_expr) => {
+      let expr = self.substitute_apply_expr(apply_expr)
+      Expr::{ kind: ApplyExpr(expr), ty: self.analysis_type(expr.ty) }
+    }
+    IfExpr(if_expr) => {
+      let expr = self.substitute_if_expr(if_expr)
+      Expr::{ kind: IfExpr(expr), ty: self.analysis_type(expr.ty) }
+    }
+    BlockExpr(block_expr) => {
+      let expr = self.substitute_block_expr(block_expr)
+      Expr::{ kind: BlockExpr(expr), ty: self.analysis_type(expr.ty) }
+    }
+    NotExpr(inner_expr) => {
+      let expr = self.substitute_expr(inner_expr)
+      Expr::{ kind: NotExpr(expr), ty: Bool }
+    }
+    NegExpr(inner_expr) => {
+      let expr = self.substitute_expr(inner_expr)
+      Expr::{ kind: NegExpr(expr), ty: self.analysis_type(expr.ty) }
+    }
+    BinaryExpr(op, left, right) => {
+      let lexpr = self.substitute_expr(left)
+      let rexpr = self.substitute_expr(right)
+      match op {
+        Add | Sub | Mul | Div | Mod =>
+          Expr::{ kind: BinaryExpr(op, lexpr, rexpr), ty: lexpr.ty }
+        Eq | NE => Expr::{ kind: BinaryExpr(op, lexpr, rexpr), ty: Bool }
+        LT | GT | LE | GE =>
+          Expr::{ kind: BinaryExpr(op, lexpr, rexpr), ty: Bool }
+        And | Or => Expr::{ kind: BinaryExpr(op, lexpr, rexpr), ty: Bool }
+        BitAnd | BitOr => Expr::{ kind: BinaryExpr(op, lexpr, rexpr), ty: Int }
+        _ => expr
+      }
+    }
   }
 }

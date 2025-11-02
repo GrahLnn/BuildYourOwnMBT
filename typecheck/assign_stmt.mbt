@@ -77,7 +77,17 @@ pub fn Context::check_assign_stmt(
         )
       }
   }
-  // println(self.type_env.local_)
+  AssignStmt::{ left_value, op, expr }
+}
+
+///|
+fn Context::substitute_assign_stmt(
+  self : Context,
+  assign_stmt : AssignStmt,
+) -> AssignStmt raise TypeCheckError {
+  let left_value = self.substitute_left_value(assign_stmt.left_value)
+  let op = assign_stmt.op
+  let expr = self.substitute_expr(assign_stmt.expr)
   AssignStmt::{ left_value, op, expr }
 }
 
@@ -88,7 +98,7 @@ pub fn Context::check_left_value(
 ) -> LeftValue raise TypeCheckError {
   match left_value.kind {
     Ident(name) => {
-      let ty = self.type_env.get(name).unwrap()
+      let ty = self.lookup_type(name).unwrap()
       match ty.kind {
         Array(_) => ()
         _ =>
@@ -101,15 +111,42 @@ pub fn Context::check_left_value(
     ArrayAccess(left_value, expr) => {
       let left_value = self.check_left_value(left_value)
       let expr = self.check_expr(expr)
+      let kind = match left_value.ty.kind {
+        Array(ty) => ty
+        _ =>
+          raise TypeCheckError("Cannot access array element of non-array type")
+      }
       LeftValue::{
         kind: ArrayAccess(left_value, expr),
-        ty: Type::{ kind: expr.ty, mutable: true },
+        ty: Type::{ kind, mutable: true },
       }
     }
     FieldAccess(left_value, name) => {
       let left_value = self.check_left_value(left_value)
       let ty = left_value.ty
       LeftValue::{ kind: FieldAccess(left_value, name), ty }
+    }
+  }
+}
+
+///|
+fn Context::substitute_left_value(
+  self : Context,
+  left_value : LeftValue,
+) -> LeftValue raise TypeCheckError {
+  match left_value.kind {
+    Ident(name) => {
+      let ty = self.lookup_type(name).unwrap()
+      LeftValue::{ kind: Ident(name), ty }
+    }
+    ArrayAccess(left_value, expr) => {
+      let left_value = self.substitute_left_value(left_value)
+      let expr = self.substitute_expr(expr)
+      LeftValue::{ kind: ArrayAccess(left_value, expr), ty: left_value.ty }
+    }
+    FieldAccess(left_value, name) => {
+      let left_value = self.substitute_left_value(left_value)
+      LeftValue::{ kind: FieldAccess(left_value, name), ty: left_value.ty }
     }
   }
 }

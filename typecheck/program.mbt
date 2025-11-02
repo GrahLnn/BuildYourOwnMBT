@@ -53,8 +53,17 @@ pub fn Context::new() -> Context {
 }
 
 ///|
-pub fn Context::lookup_type(self : Context, name : String) -> Type? {
-  self.type_env.get(name)
+pub fn Context::lookup_type(
+  self : Context,
+  name : String,
+) -> Type? raise TypeCheckError {
+  match self.type_env.get(name) {
+    Some(t) => {
+      let k = self.analysis_type(t.kind)
+      Some(Type::{ kind: k, mutable: t.mutable })
+    }
+    None => None
+  }
 }
 
 ///|
@@ -88,9 +97,22 @@ pub fn Context::check_program(
   self : Context,
   program : @parser.Program,
 ) -> Program raise TypeCheckError {
-  ignore(self)
-  ignore(program)
-  raise TypeCheckError("check_program not implemented")
+  self.collect_function_types(program)
+  self.collect_struct_names(program)
+  self.collect_top_lets(program)
+  let struct_defs = Map::new()
+  program.struct_defs.each((n, s) => struct_defs.set(
+    n,
+    self.check_struct_def(s),
+  ))
+  let top_functions = Map::new()
+  program.top_functions.each((n, s) => top_functions.set(
+    n,
+    self.check_top_function(s),
+  ))
+  let top_lets = Map::new()
+  program.top_lets.each((n, s) => top_lets.set(n, self.check_top_let(s)))
+  Program::{ top_lets, top_functions, struct_defs }
 }
 
 ///|
@@ -98,9 +120,11 @@ pub fn Context::collect_struct_names(
   self : Context,
   program : @parser.Program,
 ) -> Unit raise TypeCheckError {
-  ignore(self)
-  ignore(program)
-  raise TypeCheckError("collect_struct_names not implemented")
+  for sd in program.struct_defs {
+    let (_, struc) = sd
+    let _ = self.check_struct_def(struc)
+
+  }
 }
 
 ///|
@@ -108,7 +132,29 @@ pub fn Context::collect_function_types(
   self : Context,
   program : @parser.Program,
 ) -> Unit raise TypeCheckError {
-  ignore(self)
-  ignore(program)
-  raise TypeCheckError("collect_function_types not implemented")
+  for fd in program.top_functions {
+    let (name, func) = fd
+    let args = func.param_list
+      .map(p => self.check_parser_type(p.ty))
+      .map(p => p.kind)
+    let ret_ty = self.check_parser_type(func.ret_ty)
+    let ty = Function(args, ret_ty.kind)
+    self.func_types.set(name, ty)
+    self.type_env.set(name, Type::{ kind: ty, mutable: false })
+  }
+}
+
+///|
+pub fn Context::collect_top_lets(
+  self : Context,
+  program : @parser.Program,
+) -> Unit raise TypeCheckError {
+  for topl in program.top_lets {
+    let (name, let_def) = topl
+    let ty = match let_def.ty {
+      Some(ty) => self.check_parser_type(ty)
+      None => Type::{ kind: self.check_expr(let_def.expr).ty, mutable: false }
+    }
+    self.type_env.set(name, ty)
+  }
 }

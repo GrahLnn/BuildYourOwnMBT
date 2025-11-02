@@ -29,6 +29,18 @@ pub fn Context::check_let_stmt(
 }
 
 ///|
+pub fn Context::substitute_let_stmt(
+  self : Context,
+  let_stmt : LetStmt,
+) -> LetStmt raise TypeCheckError {
+  LetStmt::{
+    pattern: let_stmt.pattern,
+    ty: self.analysis_type(let_stmt.ty),
+    expr: self.substitute_expr(let_stmt.expr),
+  }
+}
+
+///|
 fn pattern_into(pattern : @parser.Pattern) -> Pattern {
   match pattern.kind {
     Wildcard => Pattern::{ kind: Wildcard }

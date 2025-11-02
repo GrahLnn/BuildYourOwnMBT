@@ -85,7 +85,7 @@ pub fn Context::check_apply_expr(
         let exp = self.check_expr(e)
         guard self.is_type_compatible(argt[i], exp.ty) else {
           raise TypeCheckError(
-            "Argument \{i} has type \{exp.ty}, expected \{argt[i]}",
+            "Argument \{e} has type \{exp.ty}, expected \{argt[i]}",
           )
         }
         args.push(exp)
@@ -102,7 +102,7 @@ pub fn Context::check_apply_expr(
                     None => raise TypeCheckError("Type not found: \{name}")
                   }
                   if has_type_var(ty.kind) {
-                    let ty_kind = self.update_type(ty.kind)
+                    let ty_kind = self.analysis_type(ty.kind)
                     let ty = Type::{ kind: ty_kind, mutable: ty.mutable }
                     self.type_env.set(name, ty)
                   }
@@ -120,6 +120,58 @@ pub fn Context::check_apply_expr(
         _ => ()
       }
       ApplyExpr::{ kind: Call(expr, args), ty }
+    }
+  }
+}
+
+///|
+fn Context::substitute_apply_expr(
+  self : Context,
+  expr : ApplyExpr,
+) -> ApplyExpr raise TypeCheckError {
+  match expr.kind {
+    AtomExpr(atom_expr) =>
+      ApplyExpr::{
+        kind: AtomExpr(self.substitute_atom_expr(atom_expr)),
+        ty: self.analysis_type(atom_expr.ty),
+      }
+    ArrayAccess(expr, index) => {
+      let expr = self.substitute_apply_expr(expr)
+      let index = self.substitute_expr(index)
+      ApplyExpr::{
+        kind: ArrayAccess(expr, index),
+        ty: self.analysis_type(expr.ty),
+      }
+    }
+    FieldAccess(expr, field_name) => {
+      let expr = self.substitute_apply_expr(expr)
+      match expr.ty {
+        Struct(_) =>
+          ApplyExpr::{ kind: FieldAccess(expr, field_name), ty: expr.ty }
+        Array(_) =>
+          match field_name {
+            "push" =>
+              match expr.ty {
+                Array(t) =>
+                  ApplyExpr::{
+                    kind: FieldAccess(expr, "push"),
+                    ty: Function([self.analysis_type(t)], Unit),
+                  }
+                _ => expr
+              }
+            _ => expr
+          }
+        _ => expr
+      }
+    }
+    Call(expr, arg_exprs) => {
+      let expr = self.substitute_apply_expr(expr)
+      let args = Array::new()
+      for e in arg_exprs {
+        let exp = self.substitute_expr(e)
+        args.push(exp)
+      }
+      ApplyExpr::{ kind: Call(expr, args), ty: expr.ty }
     }
   }
 }

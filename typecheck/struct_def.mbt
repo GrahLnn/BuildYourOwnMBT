@@ -30,5 +30,6 @@ pub fn Context::check_struct_def(
     name: field.name,
     ty: self.check_parser_type(field.ty, mutable=field.is_mut),
   })
+  self.struct_defs.set(name, StructDef::{ name, fields })
   StructDef::{ name, fields }
 }

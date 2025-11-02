@@ -69,15 +69,26 @@ pub fn Context::tyvar(self : Context) -> TypeKind {
 pub fn Context::deref_type(
   self : Context,
   ty : TypeKind,
+  init_id? : Int,
 ) -> TypeKind raise TypeCheckError {
+  // println("deref_type \{ty} \{init_id}")
   match ty {
     TypeVar(id) => {
+      let root = match init_id {
+        Some(r) => r
+        None => id
+      }
+      if init_id is Some(root) && id == root {
+        return TypeVar(root)
+      }
       let inner = self.type_vars.get(id).unwrap()
       match inner {
-        TypeVar(d) => {
-          guard d != id else { inner }
-          let rep = self.deref_type(inner)
-          self.type_vars.set(id, rep)
+        TypeVar(next) if next == id => TypeVar(id)
+        TypeVar(_) => {
+          let rep = self.deref_type(inner, init_id=root)
+          if !(rep is TypeVar(r) && r == root) {
+            self.type_vars.set(id, rep)
+          }
           rep
         }
         _ => {
@@ -91,6 +102,11 @@ pub fn Context::deref_type(
 }
 
 ///|
+fn Context::see_var(self : Context, id : Int) -> TypeKind {
+  self.type_vars.get(id).unwrap()
+}
+
+///|
 pub fn Context::is_type_compatible(
   self : Context,
   a : TypeKind,
@@ -98,7 +114,11 @@ pub fn Context::is_type_compatible(
 ) -> Bool raise TypeCheckError {
   match (a, b) {
     (TypeVar(a), TypeVar(b)) => {
-      guard self.type_vars.get(a).unwrap() is TypeVar(_) else { false }
+      match self.see_var(a) {
+        TypeVar(_) => ()
+        _ as tya => return self.is_type_compatible(tya, self.see_var(b))
+      }
+      guard self.see_var(a) is TypeVar(_) else { false }
       let inner_b = self.type_vars
         .get(b)
         .unwrap_or_else(() => raise TypeCheckError("TypeVar not found"))
@@ -117,8 +137,22 @@ pub fn Context::is_type_compatible(
       }
     }
     (TypeVar(id), ty) => {
-      guard self.type_vars.get(id).unwrap() is TypeVar(_) else { false }
-      let ty = self.de_var_wrap(id, ty)
+      match self.see_var(id) {
+        TypeVar(_) => ()
+        _ as tya => return self.is_type_compatible(tya, ty)
+      }
+      guard self.see_var(id) is TypeVar(_) else { false }
+      // let ty = self.de_var_wrap(id, ty)
+      self.set_var_type_to_typekind(id, ty)
+      true
+    }
+    (ty, TypeVar(id)) => {
+      match self.see_var(id) {
+        TypeVar(_) => ()
+        _ as tya => return self.is_type_compatible(tya, ty)
+      }
+      guard self.see_var(id) is TypeVar(_) else { false }
+      // let ty = self.de_var_wrap(id, ty)
       self.set_var_type_to_typekind(id, ty)
       true
     }
@@ -155,59 +189,56 @@ pub fn Context::is_type_compatible(
 }
 
 ///|
-fn Context::de_var_wrap(
-  self : Context,
-  id : Int,
-  ty : TypeKind,
-) -> TypeKind raise TypeCheckError {
-  match ty {
-    Tuple(t) => {
-      let ts = Array::new()
-      loop t[:] {
-        [TypeVar(i), .. rest] => {
-          ts.push(self.deref_type(TypeVar(i)))
-          continue rest
-        }
-        [c, .. rest] => {
-          ts.push(c)
-          continue rest
-        }
-        [] => break
-      }
-      Tuple(ts)
-    }
-    Array(t) =>
-      match t {
-        TypeVar(i) => {
-          if id > i {
-            self.type_vars.set(i, TypeVar(id))
-          }
-          ty
-        }
-        _ => Array(t)
-      }
-    Function(args, ret) => {
-      let argts = Array::new()
-      loop args[:] {
-        [TypeVar(i), .. rest] => {
-          argts.push(self.deref_type(TypeVar(i)))
-          continue rest
-        }
-        [c, .. rest] => {
-          argts.push(c)
-          continue rest
-        }
-        [] => break
-      }
-      let rety = match ret {
-        TypeVar(i) => self.deref_type(TypeVar(i))
-        _ => self.de_var_wrap(id, ret)
-      }
-      Function(argts, rety)
-    }
-    _ => self.deref_type(ty)
-  }
-}
+// fn Context::de_var_wrap(
+//   self : Context,
+//   id : Int,
+//   ty : TypeKind,
+// ) -> TypeKind raise TypeCheckError {
+//   match ty {
+//     Tuple(t) => {
+//       let ts = Array::new()
+//       loop t[:] {
+//         [TypeVar(i), .. rest] => {
+//           ts.push(TypeVar(i))
+//           continue rest
+//         }
+//         [c, .. rest] => {
+//           ts.push(c)
+//           continue rest
+//         }
+//         [] => break
+//       }
+//       Tuple(ts)
+//     }
+//     Array(t) =>
+//       match t {
+//         TypeVar(i) => {
+//           if id > i {
+//             self.type_vars.set(i, TypeVar(id))
+//           }
+//           ty
+//         }
+//         _ => Array(t)
+//       }
+//     Function(args, ret) => {
+//       let argts = Array::new()
+//       loop args[:] {
+//         [TypeVar(i), .. rest] => {
+//           argts.push(TypeVar(i))
+//           continue rest
+//         }
+//         [c, .. rest] => {
+//           argts.push(c)
+//           continue rest
+//         }
+//         [] => break
+//       }
+//       let rety = ret
+//       Function(argts, rety)
+//     }
+//     _ => self.deref_type(ty)
+//   }
+// }
 
 ///|
 pub fn Context::confirm_type(
@@ -217,29 +248,8 @@ pub fn Context::confirm_type(
   name : String,
   mutable : Bool,
 ) -> Bool raise TypeCheckError {
-  let b = self.type_env.get(name)
-  let others = match b {
-    Some(ty) => {
-      let others = Array::new()
-      for k, v in self.type_env.local_ {
-        match (ty.kind, v.kind) {
-          (TypeVar(a), TypeVar(b)) => if a == b { others.push(k) }
-          _ => ()
-        }
-      }
-      Some(others)
-    }
-    None => None
-  }
   guard self.is_type_compatible(a, kind) else { false }
   self.type_env.set(name, Type::{ kind, mutable })
-  match others {
-    Some(names) =>
-      for name in names {
-        self.type_env.set(name, Type::{ kind, mutable })
-      }
-    None => ()
-  }
   true
 }
 
@@ -254,11 +264,18 @@ pub fn Context::push_type(
 }
 
 ///|
-fn Context::update_type(
+fn Context::subst_type(self : Context, ty : Type) -> Type raise TypeCheckError {
+  let kind = self.analysis_type(ty.kind)
+  Type::{ kind, mutable: ty.mutable }
+}
+
+///|
+fn Context::analysis_type(
   self : Context,
   ty : TypeKind,
 ) -> TypeKind raise TypeCheckError {
   match ty {
+    TypeVar(i) => self.deref_type(TypeVar(i))
     Tuple(t) => {
       let ts = Array::new()
       loop t[:] {
@@ -351,7 +368,7 @@ fn Context::set_var_type_to_typekind(
           }
         }
         _ as t => {
-          let ty : TypeKind = self.update_type(t)
+          let ty : TypeKind = self.analysis_type(t)
           self.type_vars.set(id, ty)
         }
       }

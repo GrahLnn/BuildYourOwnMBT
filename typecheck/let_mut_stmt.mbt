@@ -21,3 +21,12 @@ pub fn Context::check_let_mut_stmt(
   }
   LetMutStmt::{ name, ty: expr.ty, expr }
 }
+
+///|
+fn Context::substitute_let_mut_stmt(
+  self : Context,
+  stmt : LetMutStmt,
+) -> LetMutStmt raise TypeCheckError {
+  let expr = self.substitute_expr(stmt.expr)
+  LetMutStmt::{ name: stmt.name, ty: self.analysis_type(stmt.ty), expr }
+}
