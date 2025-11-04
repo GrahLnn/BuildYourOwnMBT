@@ -94,9 +94,57 @@ pub fn Context::expr_to_knf(
   self : Context,
   expr : @typecheck.Expr,
 ) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError {
-  ignore(self)
-  ignore(expr)
-  raise KnfTransformError("expr_to_knf not implemented")
+  match expr.kind {
+    ApplyExpr(apply_expr) => self.apply_expr_to_knf(apply_expr)
+    NotExpr(e) => {
+      let ty = self.typekind_to_knf(e.ty)
+      let (stmts, expr) = self.expr_to_knf(e)
+      let name = self.expr_to_knf_name(expr, ty, stmts, coe=true)
+      (stmts, Not(name))
+    }
+    NegExpr(e) => {
+      let ty = self.typekind_to_knf(e.ty)
+      let (stmts, expr) = self.expr_to_knf(e)
+      let name = self.expr_to_knf_name(expr, ty, stmts, coe=true)
+      (stmts, Neg(name))
+    }
+    BinaryExpr(binop, lhs, rhs) => {
+      let lty = self.typekind_to_knf(lhs.ty)
+      let rty = self.typekind_to_knf(rhs.ty)
+      let (lst, lex) = self.expr_to_knf(lhs)
+      let (rs, re) = self.expr_to_knf(rhs)
+      let lname = self.expr_to_knf_name(lex, lty, lst)
+      let rname = self.expr_to_knf_name(re, rty, rs)
+      (lst + rs, Binary(binop_to_knf(binop), lname, rname))
+    }
+    IfExpr(expr) => self.if_expr_to_knf(expr)
+    _ => raise KnfTransformError("expr_to_knf not implemented \{expr.kind}")
+  }
+}
+
+///|
+fn Context::expr_to_knf_name(
+  self : Context,
+  expr : KnfExpr,
+  ty : Type,
+  stmts : Array[KnfStmt],
+  coe? : Bool = false,
+) -> Name {
+  match expr {
+    Ident(name) =>
+      if coe {
+        let name = self.add_temp(ty)
+        stmts.push(Let(name, ty, expr))
+        name
+      } else {
+        name
+      }
+    _ => {
+      let name = self.add_temp(ty)
+      stmts.push(Let(name, ty, expr))
+      name
+    }
+  }
 }
 
 ///|

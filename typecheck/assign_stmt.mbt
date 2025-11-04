@@ -122,8 +122,11 @@ pub fn Context::check_left_value(
       }
     }
     FieldAccess(left_value, name) => {
-      let left_value = self.check_left_value(left_value)
-      let ty = left_value.ty
+      guard left_value.kind is Ident(lname)
+      let ty = self.lookup_type(lname).unwrap()
+      let left_value = LeftValue::{ kind: Ident(lname), ty }
+      guard self.struct_defs.get(ty.kind.to_string()) is Some(struct_def)
+      let ty = struct_def.fields.filter(n => n.name == name).map(s => s.ty)[0]
       LeftValue::{ kind: FieldAccess(left_value, name), ty }
     }
   }

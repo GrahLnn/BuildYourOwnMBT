@@ -184,6 +184,7 @@ pub fn Context::is_type_compatible(
     (Int, Int) => true
     (Double, Double) => true
     (String, String) => true
+    (Struct(a), Struct(b)) => a == b
     _ => false
   }
 }

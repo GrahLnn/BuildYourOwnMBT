@@ -2,7 +2,7 @@
 pub(all) suberror KnfTransformError String derive(Show)
 
 ///|
-pub typealias @either.Either
+pub using @either {type Either}
 
 ///|
 pub(all) struct Name {
@@ -78,10 +78,53 @@ pub fn Context::new() -> Context {
 }
 
 ///|
+fn Context::lookup_parent_name(
+  self : Context,
+  s : String,
+  parent : Env?,
+) -> (Name, Type)? {
+  match parent {
+    None => None
+    Some(p) =>
+      match p.local_.get(s) {
+        Some((n, t)) => Some((n, t))
+        None => {
+          let look = self.lookup_parent_name(s, p.parent)
+          match look {
+            Some((n, ty)) => {
+              p.capture.set(n, ty)
+              Some((n, ty))
+            }
+            None => None
+          }
+        }
+      }
+  }
+}
+
+///|
 pub fn Context::lookup_name(self : Context, s : String) -> (Name, Type)? {
-  ignore(self) // Placeholder
-  ignore(s)
-  None
+  match self.name_env.local_.get(s) {
+    Some((name, _)) =>
+      match self.name_env.get_name_type(name) {
+        Some(t) => Some((name, t))
+        None => None
+      }
+    None =>
+      match self.globals.get(s) {
+        Some(t) => Some((Name::{ id: s, slot: 0 }, t))
+        None => {
+          let look = self.lookup_parent_name(s, self.name_env.parent)
+          match look {
+            Some((n, ty)) => {
+              self.name_env.capture.set(n, ty)
+              Some((n, ty))
+            }
+            None => None
+          }
+        }
+      }
+  }
 }
 
 ///|
@@ -93,7 +136,10 @@ pub fn Context::enter_scope(self : Context) -> Unit {
 ///|
 pub fn Context::exit_scope(self : Context) -> Unit {
   self.name_env = match self.name_env.parent {
-    Some(p) => p
+    Some(p) => {
+      self.name_env.capture.each((k, v) => p.capture.set(k, v))
+      p
+    }
     None => self.name_env
   }
 }

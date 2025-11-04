@@ -10,9 +10,13 @@ pub fn Context::struct_def_to_knf(
   self : Context,
   struct_def : @typecheck.StructDef,
 ) -> KnfStructDef raise KnfTransformError {
-  ignore(self)
-  ignore(struct_def)
-  raise KnfTransformError("struct_def_to_knf not implemented")
+  let fields = struct_def.fields.map(f => {
+    let name = f.name
+    let ty = self.type_to_knf(f.ty)
+    let mutable = f.ty.mutable
+    (name, mutable, ty)
+  })
+  KnfStructDef::{ name: struct_def.name, fields }
 }
 
 ///|

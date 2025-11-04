@@ -10,9 +10,16 @@ pub fn Context::program_to_knf(
   self : Context,
   prog : @typecheck.Program,
 ) -> KnfProgram raise KnfTransformError {
-  ignore(self)
-  ignore(prog)
-  raise KnfTransformError("program_to_knf not implemented")
+  let top_lets = Map::new()
+  prog.top_lets.each((k, v) => top_lets.set(k, self.top_let_to_knf(v)))
+  let struct_defs = Map::new()
+  prog.struct_defs.each((k, v) => struct_defs.set(k, self.struct_def_to_knf(v)))
+  let functions = Map::new()
+  prog.top_functions.each((k, v) => functions.set(
+    k,
+    self.top_function_to_knf(v),
+  ))
+  KnfProgram::{ struct_defs, top_lets, functions }
 }
 
 ///|

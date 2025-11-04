@@ -1,6 +1,11 @@
 ///|
 pub fn typecheck(program : @parser.Program) -> Program raise TypeCheckError {
   let ctx = Context::new()
+  ctx.type_env.set("print_int", Type::{
+    kind: Function([Int], Unit),
+    mutable: false,
+  })
+  ctx.func_types.set("print_int", Function([Int], Unit))
   let checked_program = ctx.check_program(program)
   ctx.substitute_type_var(checked_program)
 }

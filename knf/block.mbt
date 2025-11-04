@@ -9,9 +9,10 @@ pub fn Context::block_expr_to_knf(
   self : Context,
   expr : @typecheck.BlockExpr,
 ) -> KnfBlock raise KnfTransformError {
-  ignore(self)
-  ignore(expr)
-  raise KnfTransformError("block_expr_to_knf not implemented")
+  let stmts = Array::new()
+  expr.stmts.each(s => stmts.append(self.stmt_to_knf(s)))
+  let ty = self.typekind_to_knf(expr.ty)
+  KnfBlock::{ stmts, ty }
 }
 
 ///|
