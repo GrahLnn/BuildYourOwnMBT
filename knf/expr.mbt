@@ -118,7 +118,7 @@ pub fn Context::expr_to_knf(
       (lst + rs, Binary(binop_to_knf(binop), lname, rname))
     }
     IfExpr(expr) => self.if_expr_to_knf(expr)
-    _ => raise KnfTransformError("expr_to_knf not implemented \{expr.kind}")
+    BlockExpr(block) => ([], Block(self.block_expr_to_knf(block)))
   }
 }
 

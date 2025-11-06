@@ -43,20 +43,35 @@ fn Context::pattern_to_expr(
           let name = self.add_new_name(n, ty)
           s.push(Let(name, ty, Ident(ele)))
         }
-        // Tuple(patts) => {
-        //   let ele_ty = self.name_env.get_name_type(ele)
-        //   guard ele_ty is Some(ty)
-        //   match ty {
-        //     Tuple(tys) => {
-        //       let (s, e) = self.pattern_to_knf(patts, (s, ele), tys[i])
-
-        //     }
-        //     _ => raise KnfTransformError("Expected tuple type")
-        //   }
-        // }
-        _ => raise KnfTransformError("Tuple not implemented")
+        _ =>
+          raise KnfTransformError("Nested tuple destructuring not implemented")
       })
-    _ => raise KnfTransformError("Expected tuple literal")
+    Ident(tuple_name) =>
+      patterns.eachi((i, pattern) => match pattern.kind {
+        Wildcard => ()
+        Ident(n) => {
+          let elem_ty = self.typekind_to_knf(tys[i])
+          let name = self.add_new_name(n, elem_ty)
+          s.push(Let(name, elem_ty, TupleAccess(tuple_name, i)))
+        }
+        _ =>
+          raise KnfTransformError("Nested tuple destructuring not implemented")
+      })
+    _ => {
+      let tuple_ty = self.typekind_to_knf(ty)
+      let tmp_name = self.add_temp(tuple_ty)
+      s.push(Let(tmp_name, tuple_ty, e))
+      patterns.eachi((i, pattern) => match pattern.kind {
+        Wildcard => ()
+        Ident(n) => {
+          let elem_ty = self.typekind_to_knf(tys[i])
+          let name = self.add_new_name(n, elem_ty)
+          s.push(Let(name, elem_ty, TupleAccess(tmp_name, i)))
+        }
+        _ =>
+          raise KnfTransformError("Nested tuple destructuring not implemented")
+      })
+    }
   }
   s
 }

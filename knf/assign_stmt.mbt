@@ -51,8 +51,11 @@ fn Context::left_value_to_knf(
 ) -> (Array[KnfStmt], KnfLeftValue) raise KnfTransformError {
   match typed_left_value.kind {
     Ident(var_name) => {
-      let var_type = self.type_to_knf(typed_left_value.ty)
-      let new_name = self.add_new_name(var_name, var_type)
+      let new_name = self.name_env
+        .get(var_name)
+        .unwrap_or_else(() => raise KnfTransformError(
+          "knf variable '\{var_name}' not found",
+        ))
       ([], Ident(new_name))
     }
     ArrayAccess(base_left_value, index_expr) => {

@@ -7,6 +7,7 @@ pub struct Context {
   llvm_mod : @llvm.Module
   builder : @llvm.IRBuilder
   mut str_cnt : Int
+  mut bb_counter : Int  // 基本块计数器,用于生成唯一的基本块标签
   struct_types : Map[String, @llvm.StructType]
   knf_struct_types : Map[String, @knf.KnfStructDef]
   functions : Map[String, @llvm.Function]
@@ -15,6 +16,9 @@ pub struct Context {
   name_values : Map[@knf.Name, &@llvm.Value]
   name_types : Map[@knf.Name, @knf.Type]
   builtin_funcs : Map[String, @llvm.Function]
+  
+  // 当前函数路径,用于闭包名称混淆
+  mut current_func_path : String
 }
 
 ///|
@@ -159,12 +163,14 @@ pub fn Context::new(mod_name : String) -> Context {
     llvm_mod,
     builder,
     str_cnt: 0,
+    bb_counter: 0,
     struct_types: Map::new(),
     knf_struct_types: Map::new(),
     functions: Map::new(),
     name_values: Map::new(),
     name_types: Map::new(),
     builtin_funcs,
+    current_func_path: "",
   }
   ctx.str_cnt += 1
   ctx

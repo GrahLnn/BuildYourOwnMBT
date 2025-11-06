@@ -97,9 +97,9 @@ pub fn Context::check_program(
   self : Context,
   program : @parser.Program,
 ) -> Program raise TypeCheckError {
-  self.collect_function_types(program)
   self.collect_struct_names(program)
   self.collect_top_lets(program)
+  self.collect_function_types(program)
   let struct_defs = Map::new()
   program.struct_defs.each((n, s) => struct_defs.set(
     n,

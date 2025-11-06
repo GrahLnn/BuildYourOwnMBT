@@ -139,7 +139,10 @@ fn Context::substitute_left_value(
 ) -> LeftValue raise TypeCheckError {
   match left_value.kind {
     Ident(name) => {
-      let ty = self.lookup_type(name).unwrap()
+      let ty = Type::{
+        kind: self.analysis_type(left_value.ty.kind),
+        mutable: left_value.ty.mutable,
+      }
       LeftValue::{ kind: Ident(name), ty }
     }
     ArrayAccess(left_value, expr) => {

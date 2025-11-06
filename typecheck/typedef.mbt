@@ -278,44 +278,16 @@ fn Context::analysis_type(
   match ty {
     TypeVar(i) => self.deref_type(TypeVar(i))
     Tuple(t) => {
-      let ts = Array::new()
-      loop t[:] {
-        [TypeVar(i), .. rest] => {
-          ts.push(self.deref_type(TypeVar(i)))
-          continue rest
-        }
-        [c, .. rest] => {
-          ts.push(c)
-          continue rest
-        }
-        [] => break
-      }
+      let ts = t.map(ty => self.analysis_type(ty))
       Tuple(ts)
     }
     Array(t) => {
-      let inner = match t {
-        TypeVar(i) => self.deref_type(TypeVar(i))
-        _ => t
-      }
+      let inner = self.analysis_type(t)
       Array(inner)
     }
     Function(args, ret) => {
-      let argts = Array::new()
-      loop args[:] {
-        [TypeVar(i), .. rest] => {
-          argts.push(self.deref_type(TypeVar(i)))
-          continue rest
-        }
-        [c, .. rest] => {
-          argts.push(c)
-          continue rest
-        }
-        [] => break
-      }
-      let rety = match ret {
-        TypeVar(i) => self.deref_type(TypeVar(i))
-        _ => ret
-      }
+      let argts = args.map(ty => self.analysis_type(ty))
+      let rety = self.analysis_type(ret)
       Function(argts, rety)
     }
     _ => ty
