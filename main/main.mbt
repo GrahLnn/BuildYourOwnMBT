@@ -42,8 +42,7 @@ fn main {
       let src = @fs.read_file_to_string(input)
       let toks = @lexer.tokenize(src)
       let ast  = @parser.parse(toks)
-      let tc   = @typecheck.Context::new()
-      let _    = tc.check_program(ast)
+      let _ = @typecheck.typecheck(ast)
       println("Type check passed")
       return
     } catch {
@@ -57,20 +56,37 @@ fn main {
   }
 
   try {
+    println("[1/6] Reading file...")
     let src   = @fs.read_file_to_string(input)
+    println("[2/6] Tokenizing...")
     let toks  = @lexer.tokenize(src)
+    println("[3/6] Parsing...")
     let ast   = @parser.parse(toks)
-    let tc    = @typecheck.Context::new()
-    let typed = tc.check_program(ast)
-
-    // D. 代码生成(与 minimoonbit.json 的 emit 匹配)
+    println("[4/6] Type checking...")
+    let typed = @typecheck.typecheck(ast)
+    println("[5/6] KNF transformation...")
     let knf_prog = @knf.knf_transform(typed)
+    println("[6/6] Code generation...")
     let llvm_mod = @codegen.codegen(knf_prog)
     let ir_text = llvm_mod.to_string()
 
     @fs.write_string_to_file(output.val, ir_text)
-    println("Compilation successful: \{output.val}")
   } catch {
-    e => { println(e); abort("compilation failed") }
+    @lexer.TokenizeError(msg) => {
+      println("Tokenize error: \{msg}")
+      abort("tokenize failed")
+    }
+    @parser.ParseError(msg) => {
+      println("Parse error: \{msg}")
+      abort("parse failed")
+    }
+    @typecheck.TypeCheckError(msg) => {
+      println("Type error: \{msg}")
+      abort("type check failed")
+    }
+    e => {
+      println("Error: \{e}")
+      abort("compilation failed")
+    }
   }
 }

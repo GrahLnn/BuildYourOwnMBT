@@ -27,7 +27,13 @@ pub fn knf_transform(
   prog : @typecheck.Program,
 ) -> KnfProgram raise KnfTransformError {
   let context = Context::new()
+  
+  // 注册内置函数 - 这些函数在 LLVM codegen 中会被声明
   context.globals.set("print_int", Function([Int], Unit))
+  context.globals.set("print_double", Function([Double], Unit))
+  context.globals.set("print_bool", Function([Bool], Unit))
+  context.globals.set("println", Function([String], Unit))
+  
   context.program_to_knf(prog)
 }
 
