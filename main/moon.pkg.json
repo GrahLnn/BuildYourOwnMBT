@@ -6,6 +6,11 @@
     "moonbitlang/MiniMoonbit/lexer",
     "moonbitlang/MiniMoonbit/parser",
     "moonbitlang/MiniMoonbit/typecheck",
-    "moonbitlang/MiniMoonbit/codegen"
+    "moonbitlang/MiniMoonbit/knf",
+    "moonbitlang/MiniMoonbit/codegen",
+    {
+      "path": "Kaida-Amethyst/MoonLLVM/IR"
+    },
+    "Yoorkin/ArgParser"
   ]
 }

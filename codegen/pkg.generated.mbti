@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitlang/MiniMoonbit/codegen"
+
+import(
+  "Kaida-Amethyst/MoonLLVM/IR"
+  "moonbitlang/MiniMoonbit/knf"
+)
+
+// Values
+fn codegen(@knf.KnfProgram) -> @IR.Module raise
+
+// Errors
+pub(all) suberror CodegenError String
+impl Show for CodegenError
+
+// Types and methods
+pub struct Context {
+  llvm_ctx : @IR.Context
+  llvm_mod : @IR.Module
+  builder : @IR.IRBuilder
+  mut str_cnt : Int
+  mut bb_counter : Int
+  struct_types : Map[String, @IR.StructType]
+  knf_struct_types : Map[String, @knf.KnfStructDef]
+  functions : Map[String, @IR.Function]
+  name_values : Map[@knf.Name, &@IR.Value]
+  name_types : Map[@knf.Name, @knf.Type]
+  builtin_funcs : Map[String, @IR.Function]
+  mut current_func_path : String
+}
+fn Context::array_put_codegen(Self, @knf.Name, @knf.Name, @knf.KnfExpr) -> Unit raise
+fn Context::assign_stmt_codegen(Self, @knf.Name, @knf.KnfExpr) -> Unit raise
+fn Context::block_codegen(Self, @knf.KnfBlock) -> &@IR.Value? raise
+fn Context::closure_codegen(Self, @knf.KnfClosure) -> Unit
+fn Context::collect_all_closures(Self, Map[String, @knf.KnfFunction]) -> Array[(@knf.KnfClosure, String)]
+fn Context::collect_func_values(Self, Map[String, @knf.KnfFunction]) -> Unit raise
+fn Context::collect_struct_types(Self, Map[String, @knf.KnfStructDef]) -> Unit raise
+fn Context::declare_closure_function(Self, @knf.KnfClosure) -> Unit raise
+fn Context::default_value(Self, @knf.Type) -> &@IR.Value raise
+fn Context::expr_codegen(Self, @knf.KnfExpr) -> &@IR.Value? raise
+fn Context::generate_closure_function(Self, @knf.KnfClosure, String) -> Unit raise
+fn Context::if_codegen(Self, @knf.KnfExpr, @knf.KnfBlock, @knf.KnfBlock) -> &@IR.Value? raise
+fn Context::let_mut_stmt_codegen(Self, @knf.Name, @knf.Type, @knf.KnfExpr) -> Unit raise
+fn Context::let_stmt_codegen(Self, @knf.Name, @knf.Type, @knf.KnfExpr) -> Unit raise
+fn Context::new(String) -> Self
+fn Context::stmt_codegen(Self, @knf.KnfStmt) -> Unit raise
+fn Context::struct_field_set_codegen(Self, @knf.Name, String, @knf.Name) -> Unit raise
+fn Context::top_function_codegen(Self, @knf.KnfFunction) -> @IR.Function raise
+fn Context::type_codegen_concrete(Self, @knf.Type) -> &@IR.Type raise
+fn Context::type_codegen_opaque(Self, @knf.Type) -> &@IR.Type
+fn Context::while_codegen(Self, @knf.KnfBlock, @knf.KnfBlock) -> Unit raise
+
+// Type aliases
+
+// Traits
+

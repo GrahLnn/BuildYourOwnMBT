@@ -1,24 +1,54 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/MiniMoonbit/parser"
+package "moonbitlang/MiniMoonbit/parser"
 
 import(
-  "username/MiniMoonbit/lexer"
+  "moonbitlang/MiniMoonbit/lexer"
 )
 
 // Values
+fn parse(Array[@lexer.Token]) -> Program raise ParseError
+
 fn parse_apply_expr(ArrayView[@lexer.Token]) -> (ApplyExpr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_assign_stmt(ArrayView[@lexer.Token]) -> (AssignStmt, ArrayView[@lexer.Token]) raise ParseError
 
 fn parse_atom_expr(ArrayView[@lexer.Token]) -> (AtomExpr, ArrayView[@lexer.Token]) raise ParseError
 
 fn parse_block_expr(ArrayView[@lexer.Token]) -> (BlockExpr, ArrayView[@lexer.Token]) raise ParseError
 
-fn parse_expr(ArrayView[@lexer.Token]) -> (Expr, ArrayView[@lexer.Token]) raise ParseError
+fn parse_delimited_list(ArrayView[@lexer.Token], Char, Char) -> (Array[Expr], ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_expr(ArrayView[@lexer.Token], min_bp? : Int) -> (Expr, ArrayView[@lexer.Token]) raise ParseError
 
 fn parse_if_expr(ArrayView[@lexer.Token]) -> (IfExpr, ArrayView[@lexer.Token]) raise ParseError
 
+fn parse_left_value(ArrayView[@lexer.Token]) -> (LeftValue, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_let_mut_stmt(ArrayView[@lexer.Token]) -> (LetMutStmt, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_let_stmt(ArrayView[@lexer.Token]) -> (LetStmt, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_local_function(ArrayView[@lexer.Token]) -> (LocalFunction, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_params(ArrayView[@lexer.Token]) -> (Array[Param], ArrayView[@lexer.Token]) raise ParseError
+
 fn parse_pattern(ArrayView[@lexer.Token]) -> (Pattern, ArrayView[@lexer.Token]) raise ParseError
 
+fn parse_stmt(ArrayView[@lexer.Token]) -> (Stmt, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_struct_construct(ArrayView[@lexer.Token]) -> (AtomExpr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_struct_def(ArrayView[@lexer.Token]) -> (StructDef, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_struct_field(ArrayView[@lexer.Token]) -> (StructField, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_top_function(ArrayView[@lexer.Token]) -> (TopFunction, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_top_let(ArrayView[@lexer.Token]) -> (TopLet, ArrayView[@lexer.Token]) raise ParseError
+
 fn parse_type(ArrayView[@lexer.Token]) -> (Type, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_while_stmt(ArrayView[@lexer.Token]) -> (WhileStmt, ArrayView[@lexer.Token]) raise ParseError
 
 // Errors
 pub suberror ParseError String
@@ -69,13 +99,14 @@ pub(all) enum AtomExprKind {
   Int(Int)
   Double(Double)
   Bool(Bool)
+  String(String)
   Ident(String)
   Unit
   Paren(Expr)
   Tuple(Array[Expr])
   Array(Array[Expr])
   ArrayMake(Expr, Expr)
-  StructConstruct(String, Array[(String, Expr)])
+  StructConstruct(StructConstructExpr)
 }
 impl Eq for AtomExprKind
 impl Show for AtomExprKind
@@ -99,7 +130,6 @@ pub(all) enum BinaryOp {
   BitAnd
   BitOr
 }
-fn BinaryOp::from_tok_binary_op(@lexer.BinaryOp) -> Self
 impl Eq for BinaryOp
 impl Show for BinaryOp
 
@@ -156,10 +186,6 @@ impl Eq for LeftValueKind
 impl Show for LeftValueKind
 
 pub(all) struct LetMutStmt {
-  lineno : Int
-  column : Int
-  end_lineno : Int
-  end_column : Int
   name : String
   ty : Type?
   expr : Expr
@@ -169,11 +195,27 @@ impl Show for LetMutStmt
 
 pub(all) struct LetStmt {
   pattern : Pattern
-  ty : TypeKind?
+  ty : Type?
   expr : Expr
 }
 impl Eq for LetStmt
 impl Show for LetStmt
+
+pub(all) struct LocalFunction {
+  fname : String
+  param_list : Array[(String, Type?)]
+  ret_ty : Type?
+  body : BlockExpr
+}
+impl Eq for LocalFunction
+impl Show for LocalFunction
+
+pub(all) struct Param {
+  name : String
+  ty : Type
+}
+impl Eq for Param
+impl Show for Param
 
 pub(all) struct Pattern {
   kind : PatternKind
@@ -189,11 +231,14 @@ pub(all) enum PatternKind {
 impl Eq for PatternKind
 impl Show for PatternKind
 
+pub(all) struct Program {
+  top_lets : Map[String, TopLet]
+  top_functions : Map[String, TopFunction]
+  struct_defs : Map[String, StructDef]
+}
+impl Show for Program
+
 pub(all) struct Stmt {
-  lineno : Int
-  column : Int
-  end_lineno : Int
-  end_column : Int
   kind : StmtKind
 }
 impl Eq for Stmt
@@ -206,11 +251,51 @@ pub(all) enum StmtKind {
   WhileStmt(WhileStmt)
   ExprStmt(Expr)
   ReturnStmt(Expr?)
+  LocalFunction(LocalFunction)
 }
 impl Eq for StmtKind
 impl Show for StmtKind
 
-pub struct Type {
+pub(all) struct StructConstructExpr {
+  name : String
+  fields : Array[(String, Expr)]
+}
+impl Eq for StructConstructExpr
+impl Show for StructConstructExpr
+
+pub(all) struct StructDef {
+  name : String
+  fields : Array[StructField]
+}
+impl Eq for StructDef
+impl Show for StructDef
+
+pub(all) struct StructField {
+  name : String
+  is_mut : Bool
+  ty : Type
+}
+impl Eq for StructField
+impl Show for StructField
+
+pub(all) struct TopFunction {
+  fname : String
+  param_list : Array[Param]
+  ret_ty : Type
+  body : BlockExpr
+}
+impl Eq for TopFunction
+impl Show for TopFunction
+
+pub(all) struct TopLet {
+  name : String
+  ty : Type?
+  expr : Expr
+}
+impl Eq for TopLet
+impl Show for TopLet
+
+pub(all) struct Type {
   kind : TypeKind
 }
 impl Eq for Type
@@ -220,10 +305,6 @@ pub(all) enum TypeKind {
   Unit
   Bool
   Int
-  Int64
-  UInt
-  UInt64
-  Float
   Double
   String
   Tuple(Array[TypeKind])

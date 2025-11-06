@@ -1,11 +1,11 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/MiniMoonbit/lexer"
+package "moonbitlang/MiniMoonbit/lexer"
 
 // Values
 fn tokenize(String) -> Array[Token] raise TokenizeError
 
 // Errors
-pub suberror TokenizeError String
+pub(all) suberror TokenizeError String
 impl Show for TokenizeError
 
 // Types and methods
@@ -46,16 +46,13 @@ impl Show for BinaryOp
 pub(all) enum Keyword {
   Fn
   Struct
-  Enum
   Let
   Mut
   If
   Else
-  Match
   While
   For
   Return
-  Extern
 }
 impl Eq for Keyword
 impl Show for Keyword
