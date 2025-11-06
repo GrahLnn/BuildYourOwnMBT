@@ -1,11 +1,11 @@
 {
   "is-main": true,
   "import": [
-    "moonbitlang/async/io",
-    "moonbitlang/async/fs",
-    "moonbitlang/async",
+    "moonbitlang/x/sys",
+    "moonbitlang/x/fs",
     "moonbitlang/MiniMoonbit/lexer",
     "moonbitlang/MiniMoonbit/parser",
     "moonbitlang/MiniMoonbit/typecheck",
+    "moonbitlang/MiniMoonbit/codegen"
   ]
 }

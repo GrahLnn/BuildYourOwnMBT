@@ -1,71 +1,36 @@
-///|
-async fn main {
-  let help_info =
-    #|Usage: tmbt [options]
-    #|
-    #|Options:
-    #|  -h, --help                Show this help message
-    #|  -f, --file <file>         Specify the input TinyMoonbit source file (Must provide)
-    #|  -stop-after=lex           Stop after tokenization
-    #|  -stop-after=parse         Stop after parsing
-    #|  -stop-after=typecheck     Stop after type checking
-    #|  -stop-after=knf           Stop after Knf transformation
-  let args = @env.args()
-  let legal_args = [
-    "-h", "--help", "-f", "--file", "-stop-after=parse", "-stop-after=knf",
-  ]
-  for arg in args[1:] {
-    if arg.has_prefix("-") && !legal_args.contains(arg) {
-      println("Unknown argument: \{arg}")
-      println(help_info)
-      return
-    }
-  }
-  if args.contains("-h") || args.contains("--help") {
-    println(help_info)
+// 同步入口. 不依赖 async.
+fn main {
+  // A. 读取命令行
+  let args = @sys.args()
+
+  // B. --typecheck <input>
+  if args.length() >= 3 && args[1] == "--typecheck" {
+    let input = args[2]
+    let src = @fs.read_file_to_string(~input)
+    let toks = @lexer.tokenize(src)
+    let ast  = @parser.parse(toks)
+    let tc   = @typecheck.Context::new()
+    let _    = tc.check_program(ast)
     return
   }
-  let fidx = args.search_by(arg => arg is "-f" || arg is "--file")
-  let code = match fidx {
-    Some(idx) if idx + 1 < args.length() => {
-      let filename = args[idx + 1]
-      if !@fs.exists(filename) {
-        println("Error: File '\{filename}' does not exist.")
-        return
-      }
-      @fs.read_file(filename).text()
-    }
-    Some(_) => {
-      println("Error: No file specified after -f/--file option.")
-      return
-    }
-    None => {
-      println(
-        "Error: No input file specified. Use -f or --file to specify the source file.",
-      )
-      println(help_info)
-      return
-    }
+
+  // C. <input> -o <output>
+  if args.length() < 4 { panic("usage: <input> -o <output>") }
+  let input = args[1]
+  let oidx  = args.search_by(a => a == "-o")
+  let output = match oidx {
+    Some(i) if i + 1 < args.length() => args[i + 1]
+    _ => panic("missing -o <output>")
   }
-  let tokens = @lexer.tokenize(code)
-  if args.contains("-stop-after=lex") {
-    println("Tokens:")
-    for token in tokens {
-      println(token)
-    }
-    return
-  }
-  let prog = @parser.parse(tokens)
-  if args.contains("-stop-after=parse") {
-    println("Parsed AST:")
-    println(prog)
-    return
-  }
-  let typecheck_ctx = @typecheck.Context::new()
-  let checked_prog = typecheck_ctx.check_program(prog)
-  if args.contains("-stop-after=typecheck") {
-    println("Type-Checked AST:")
-    println(checked_prog)
-    return
-  }
+
+  let src   = @fs.read_file_to_string!(~input)
+  let toks  = @lexer.tokenize(src)
+  let ast   = @parser.parse(toks)
+  let tc    = @typecheck.Context::new()
+  let typed = tc.check_program(ast)
+
+  // D. 代码生成（与 minimoonbit.json 的 emit 匹配）
+  let ir_text = @codegen.emit_llvm_ir(typed)   // 或改成 emit_riscv_asm
+
+  @fs.write_string_to_file(path=output, content=ir_text)
 }
