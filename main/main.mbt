@@ -56,17 +56,11 @@ fn main {
   }
 
   try {
-    println("[1/6] Reading file...")
     let src   = @fs.read_file_to_string(input)
-    println("[2/6] Tokenizing...")
     let toks  = @lexer.tokenize(src)
-    println("[3/6] Parsing...")
     let ast   = @parser.parse(toks)
-    println("[4/6] Type checking...")
     let typed = @typecheck.typecheck(ast)
-    println("[5/6] KNF transformation...")
     let knf_prog = @knf.knf_transform(typed)
-    println("[6/6] Code generation...")
     let llvm_mod = @codegen.codegen(knf_prog)
     let ir_text = llvm_mod.to_string()
 
