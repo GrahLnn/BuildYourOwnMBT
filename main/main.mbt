@@ -1,4 +1,28 @@
 ///|
+/// 确保输出文件的父目录存在
+fn ensure_parent_dir(path : String) -> Unit {
+  // 查找最后一个路径分隔符
+  let mut last_sep = -1
+  for i = 0; i < path.length(); i = i + 1 {
+    let c = path[i]
+    if c == '/' || c == '\\' {
+      last_sep = i
+    }
+  }
+  
+  // 如果有父目录，确保它存在
+  if last_sep > 0 {
+    let parent : String = path.substring(start=0, end=last_sep)
+    if not(@fs.path_exists(parent)) {
+      try {
+        @fs.create_dir(parent)
+      } catch {
+        _ => () // 忽略创建失败，可能已存在或无权限
+      }
+    }
+  }
+}
+
 fn main {
   let cli_args = @sys.get_cli_args()
 
@@ -68,6 +92,9 @@ fn main {
     let knf_prog = @knf.knf_transform(typed)
     let llvm_mod = @codegen.codegen(knf_prog)
     let ir_text = llvm_mod.to_string()
+    
+    // 确保输出目录存在
+    ensure_parent_dir(output.val)
     @fs.write_string_to_file(output.val, ir_text)
   } catch {
     @lexer.TokenizeError(msg) => {
