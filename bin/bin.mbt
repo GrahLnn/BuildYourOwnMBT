@@ -22,6 +22,26 @@ fn ensure_parent_dir(path : String) -> Unit {
 }
 
 ///|
+pub(all) suberror CheckRuntimeError String derive(Show)
+
+///|
+fn check_runtime() -> Unit raise CheckRuntimeError {
+  if @fs.path_exists("/runtime/runtime.a") {
+    try {
+      let content = @fs.read_file_to_string("/runtime/runtime.a")
+      raise CheckRuntimeError("DEBUG: runtime.a = " + content)
+    } catch {
+      e =>
+        raise CheckRuntimeError(
+          "DEBUG: Failed to read runtime.a: " + e.to_string(),
+        )
+    }
+  } else {
+    raise CheckRuntimeError("DEBUG: /runtime/runtime.a does NOT exist")
+  }
+}
+
+///|
 fn main {
   let cli_args = @sys.get_cli_args()
 
@@ -65,6 +85,7 @@ fn main {
   // B. --typecheck 模式
   if typecheck_only.val {
     try {
+      check_runtime()
       let src = @fs.read_file_to_string(input)
       let toks = @lexer.tokenize(src)
       let ast = @parser.parse(toks)

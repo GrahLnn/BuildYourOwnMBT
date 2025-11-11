@@ -362,7 +362,6 @@ pub fn Context::expr_codegen(
               )
           }
         None => {
-          // 跳过 print_* 函数调用（评测机 runtime 不提供）
           let func_name_str = func_name.to_string()
           // if func_name_str == "print_int" ||
           //   func_name_str == "print_double" ||
