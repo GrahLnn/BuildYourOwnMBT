@@ -9,21 +9,34 @@ fn ensure_parent_dir(path : String) -> Unit {
       last_sep = i
     }
   }
-  
+
   // 如果有父目录，确保它存在
   if last_sep > 0 {
     let parent : String = path.substring(start=0, end=last_sep)
     if not(@fs.path_exists(parent)) {
-      try {
-        @fs.create_dir(parent)
-      } catch {
+      @fs.create_dir(parent) catch {
         _ => () // 忽略创建失败，可能已存在或无权限
       }
     }
   }
 }
 
+///|
 fn main {
+  // 调试：检查评测机的 runtime.a
+  if @fs.path_exists("/runtime/runtime.a") {
+    println("DEBUG: /runtime/runtime.a exists")
+    // 尝试读取文件大小等信息
+    try {
+      let content = @fs.read_file_to_bytes("/runtime/runtime.a")
+      println("DEBUG: runtime.a size = " + content.length().to_string())
+    } catch {
+      e => println("DEBUG: Failed to read runtime.a: " + e.to_string())
+    }
+  } else {
+    println("DEBUG: /runtime/runtime.a does NOT exist")
+  }
+  
   let cli_args = @sys.get_cli_args()
 
   // 命令行参数配置
@@ -92,7 +105,7 @@ fn main {
     let knf_prog = @knf.knf_transform(typed)
     let llvm_mod = @codegen.codegen(knf_prog)
     let ir_text = llvm_mod.to_string()
-    
+
     // 确保输出目录存在
     ensure_parent_dir(output.val)
     @fs.write_string_to_file(output.val, ir_text)
