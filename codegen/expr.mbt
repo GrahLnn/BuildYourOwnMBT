@@ -314,15 +314,42 @@ pub fn Context::expr_codegen(
       self.builder.createLoad(elem_llvm_ty, elem_ptr) |> Some
     }
     Call(func_name, args) => {
-      // 先检查是否是局部变量(函数指针)
+      // 先检查是否是局部变量(闭包对象或函数指针)
       let arg_values : Array[&@llvm.Value] = Array::new()
       let func : @either.Either[@llvm.Function, &@llvm.Value] = match
         self.name_values.get(func_name) {
-        Some(func_ptr) => {
-          // 局部变量(函数指针),需要添加环境指针
-          arg_values.push(
-            self.llvm_ctx.getConstPointerNull(self.llvm_ctx.getPtrTy()),
+        Some(closure_obj_ptr) => {
+          // 局部变量(闭包对象),需要从闭包对象中提取函数指针和环境
+          // 闭包对象类型: { ptr func_ptr, ptr env }
+          let closure_struct_ty = self.llvm_ctx.getStructType([
+            self.llvm_ctx.getPtrTy(),
+            self.llvm_ctx.getPtrTy(),
+          ])
+          
+          // 提取函数指针 (第一个字段)
+          let func_ptr_field = self.builder.createGEP(
+            closure_obj_ptr,
+            closure_struct_ty,
+            [self.llvm_ctx.getConstInt32(0), self.llvm_ctx.getConstInt32(0)],
           )
+          let func_ptr = self.builder.createLoad(
+            self.llvm_ctx.getPtrTy(),
+            func_ptr_field,
+          )
+          
+          // 提取环境指针 (第二个字段)
+          let env_field = self.builder.createGEP(
+            closure_obj_ptr,
+            closure_struct_ty,
+            [self.llvm_ctx.getConstInt32(0), self.llvm_ctx.getConstInt32(1)],
+          )
+          let env_ptr = self.builder.createLoad(
+            self.llvm_ctx.getPtrTy(),
+            env_field,
+          )
+          
+          // 添加环境指针作为第一个参数
+          arg_values.push(env_ptr)
           Right(func_ptr)
         }
         None => {

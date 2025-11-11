@@ -124,7 +124,7 @@ pub fn Context::top_function_codegen(
   self.builder.setInsertPoint(entry_bb)
   self.name_values.clear()
   self.name_types.clear()
-  
+
   // 设置当前函数路径
   self.current_func_path = fname
   {
