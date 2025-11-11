@@ -25,7 +25,7 @@ test "Codegen Call Test" {
       #|define void @main() {
       #|entry:
       #|  %0 = call i32 @add(ptr null, i32 2, i32 3)
-      // #|  call void @print_int(i32 %0)
+      #|  call void @print_int(i32 %0)
       #|  ret void
       #|}
       #|

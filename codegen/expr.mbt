@@ -318,7 +318,7 @@ pub fn Context::expr_codegen(
       let arg_values : Array[&@llvm.Value] = Array::new()
       let func : @either.Either[@llvm.Function, &@llvm.Value] = match
         self.name_values.get(func_name) {
-        Some(local_value) => {
+        Some(local_value) =>
           // 检查是否是函数类型(闭包)
           match self.name_types.get(func_name) {
             Some(@knf.Function(_, _)) => {
@@ -328,7 +328,7 @@ pub fn Context::expr_codegen(
                 self.llvm_ctx.getPtrTy(),
                 self.llvm_ctx.getPtrTy(),
               ])
-              
+
               // 提取函数指针 (第一个字段)
               let func_ptr_field = self.builder.createGEP(
                 local_value,
@@ -339,7 +339,7 @@ pub fn Context::expr_codegen(
                 self.llvm_ctx.getPtrTy(),
                 func_ptr_field,
               )
-              
+
               // 提取环境指针 (第二个字段)
               let env_field = self.builder.createGEP(
                 local_value,
@@ -350,7 +350,7 @@ pub fn Context::expr_codegen(
                 self.llvm_ctx.getPtrTy(),
                 env_field,
               )
-              
+
               // 添加环境指针作为第一个参数
               arg_values.push(env_ptr)
               Right(func_ptr)
@@ -361,16 +361,15 @@ pub fn Context::expr_codegen(
                 "Attempting to call non-function value: \{func_name}",
               )
           }
-        }
         None => {
           // 跳过 print_* 函数调用（评测机 runtime 不提供）
           let func_name_str = func_name.to_string()
-          if func_name_str == "print_int" ||
-            func_name_str == "print_double" ||
-            func_name_str == "print_bool" {
-            // 返回一个 void 常量，不生成调用指令
-            return None
-          }
+          // if func_name_str == "print_int" ||
+          //   func_name_str == "print_double" ||
+          //   func_name_str == "print_bool" {
+          //   // 返回一个 void 常量，不生成调用指令
+          //   return None
+          // }
           let func = match self.builtin_funcs.get(func_name_str) {
             Some(builtin) => builtin
             None => {

@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+void *moonbit_malloc(int32_t size)
+{
+    return malloc(size);
+}
+
 typedef struct
 {
     int32_t length;
