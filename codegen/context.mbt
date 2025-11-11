@@ -33,18 +33,18 @@ pub fn Context::new(mod_name : String) -> Context {
   let voidty = llvm_ctx.getVoidTy()
   let moonbit_malloc_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty])
   let moonbit_malloc = try! llvm_mod.addFunction(
-      moonbit_malloc_ty, "moonbit_malloc",
+      moonbit_malloc_ty, "minimbt_malloc",
     )
   let print_int_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [i32ty])
-  let print_int = try! llvm_mod.addFunction(print_int_ty, "print_int")
+  let print_int = try! llvm_mod.addFunction(print_int_ty, "minimbt_print_int")
   let print_double_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
       doublety,
     ])
-  let print_double = try! llvm_mod.addFunction(print_double_ty, "print_double")
+  let print_double = try! llvm_mod.addFunction(print_double_ty, "minimbt_print_double")
   let print_bool_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
       boolty,
     ])
-  let print_bool = try! llvm_mod.addFunction(print_bool_ty, "print_bool")
+  let print_bool = try! llvm_mod.addFunction(print_bool_ty, "minimbt_print_bool")
   let make_int_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, i32ty])
   let make_double_array_ty = try! llvm_ctx.getFunctionType(ptrty, [
       i32ty, doublety,
