@@ -27,7 +27,6 @@ pub fn Context::generate_closure_function(
   // 生成闭包函数的函数体
   let closure_name = closure_def.name.to_string()
   let mangled_name = "\{parent_path}$\{closure_name}"
-  
   let knf_func = @knf.KnfFunction::{
     name: mangled_name,
     ret_ty: closure_def.ret_ty,

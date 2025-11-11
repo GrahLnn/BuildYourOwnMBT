@@ -12,7 +12,7 @@ fn ensure_parent_dir(path : String) -> Unit {
 
   // 如果有父目录，确保它存在
   if last_sep > 0 {
-    let parent : String = path.substring(start=0, end=last_sep)
+    let parent : String = try! path[:last_sep].to_string()
     if not(@fs.path_exists(parent)) {
       @fs.create_dir(parent) catch {
         _ => () // 忽略创建失败，可能已存在或无权限
@@ -23,20 +23,6 @@ fn ensure_parent_dir(path : String) -> Unit {
 
 ///|
 fn main {
-  // 调试：检查评测机的 runtime.a
-  if @fs.path_exists("/runtime/runtime.a") {
-    println("DEBUG: /runtime/runtime.a exists")
-    // 尝试读取文件大小等信息
-    try {
-      let content = @fs.read_file_to_bytes("/runtime/runtime.a")
-      println("DEBUG: runtime.a size = " + content.length().to_string())
-    } catch {
-      e => println("DEBUG: Failed to read runtime.a: " + e.to_string())
-    }
-  } else {
-    println("DEBUG: /runtime/runtime.a does NOT exist")
-  }
-  
   let cli_args = @sys.get_cli_args()
 
   // 命令行参数配置
