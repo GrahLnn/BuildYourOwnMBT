@@ -127,6 +127,8 @@ pub fn Context::expr_codegen(
           } else {
             self.builder.createICmpSGE(lv, rv)
           }
+        And => self.builder.createAnd(lv, rv)
+        Or => self.builder.createOr(lv, rv)
         _ =>
           raise CodegenError("Unsupported binary operation in codegen: \{op}")
       }
