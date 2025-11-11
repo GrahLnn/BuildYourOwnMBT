@@ -40,16 +40,20 @@ pub fn Context::new(mod_name : String) -> Context {
   let print_double_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
       doublety,
     ])
-  let print_double = try! llvm_mod.addFunction(print_double_ty, "minimbt_print_double")
+  let print_double = try! llvm_mod.addFunction(
+      print_double_ty, "minimbt_print_double",
+    )
   let print_bool_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
       boolty,
     ])
-  let print_bool = try! llvm_mod.addFunction(print_bool_ty, "minimbt_print_bool")
+  let print_bool = try! llvm_mod.addFunction(
+      print_bool_ty, "minimbt_print_bool",
+    )
   let make_int_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, i32ty])
-  let make_double_array_ty = try! llvm_ctx.getFunctionType(ptrty, [
-      i32ty, doublety,
-    ])
-  let make_bool_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, boolty])
+  // let make_double_array_ty = try! llvm_ctx.getFunctionType(ptrty, [
+  //     i32ty, doublety,
+  //   ])
+  // let make_bool_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, boolty])
   let make_ptr_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, ptrty])
   let get_array_length_ty = try! llvm_ctx.getFunctionType(i32ty, [ptrty])
   let array_int_push_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
@@ -84,16 +88,16 @@ pub fn Context::new(mod_name : String) -> Context {
       ptrty, i32ty, ptrty,
     ])
   let make_int_array = try! llvm_mod.addFunction(
-      make_int_array_ty, "make_int_array",
+      make_int_array_ty, "minimbt_create_array",
     )
-  let make_double_array = try! llvm_mod.addFunction(
-      make_double_array_ty, "make_double_array",
-    )
-  let make_bool_array = try! llvm_mod.addFunction(
-      make_bool_array_ty, "make_bool_array",
-    )
+  // let make_double_array = try! llvm_mod.addFunction(
+  //     make_double_array_ty, "minimbt_create_array",
+  //   )
+  // let make_bool_array = try! llvm_mod.addFunction(
+  //     make_bool_array_ty, "make_bool_array",
+  //   )
   let make_ptr_array = try! llvm_mod.addFunction(
-      make_ptr_array_ty, "make_ptr_array",
+      make_ptr_array_ty, "minimbt_create_ptr_array",
     )
   let get_array_length = try! llvm_mod.addFunction(
       get_array_length_ty, "get_array_length",
@@ -140,8 +144,8 @@ pub fn Context::new(mod_name : String) -> Context {
     "print_double": print_double,
     "print_bool": print_bool,
     "make_int_array": make_int_array,
-    "make_double_array": make_double_array,
-    "make_bool_array": make_bool_array,
+    // "make_double_array": make_double_array,
+    // "make_bool_array": make_bool_array,
     "make_ptr_array": make_ptr_array,
     "get_array_length": get_array_length,
     "array_int_push": array_int_push,
