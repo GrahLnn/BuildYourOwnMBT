@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
 typedef struct
 {
@@ -164,4 +165,24 @@ void array_bool_put(BoolArray *arr, int32_t index, uint8_t value)
 void array_ptr_put(PtrArray *arr, int32_t index, void *value)
 {
     arr->data[index] = value;
+}
+
+void *moonbit_malloc(int32_t size)
+{
+    return malloc(size);
+}
+
+void print_int(int32_t value)
+{
+    printf("%d\n", value);
+}
+
+void print_double(double value)
+{
+    printf("%f\n", value);
+}
+
+void print_bool(uint8_t value)
+{
+    printf("%s\n", value ? "true" : "false");
 }
