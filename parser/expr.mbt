@@ -100,7 +100,7 @@ pub fn parse_expr(
       let (e, r) = parse_if_expr(tks)
       (expr(IfExpr(e)), r)
     }
-    [{ kind: Keyword(Match) }, .. rest] => {
+    [{ kind: Keyword(Match) }, ..] as rest => {
       let (s, r) = parse_match_expr(rest)
       (expr(MatchExpr(s)), r)
     }
