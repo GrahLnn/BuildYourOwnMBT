@@ -488,33 +488,12 @@ fn Context::get_array(
     index
   }
   match arr_ty {
-    Array(ty) =>
-      match ty {
-        Int =>
-          self.builder.createCall(
-            self.builtin_funcs.get("array_int_get").unwrap(),
-            [array, index_value],
-          )
-          |> Some
-        Double =>
-          self.builder.createCall(
-            self.builtin_funcs.get("array_double_get").unwrap(),
-            [array, index_value],
-          )
-          |> Some
-        Bool =>
-          self.builder.createCall(
-            self.builtin_funcs.get("array_bool_get").unwrap(),
-            [array, index_value],
-          )
-          |> Some
-        _ =>
-          self.builder.createCall(
-            self.builtin_funcs.get("array_ptr_get").unwrap(),
-            [array, index_value],
-          )
-          |> Some
-      }
+    Array(ty) => {
+      let elem_llvm_ty = self.type_codegen_opaque(ty)
+      let elem_ptr = self.builder.createGEP(array, elem_llvm_ty, [index_value])
+      let value = self.builder.createLoad(elem_llvm_ty, elem_ptr)
+      value |> Some
+    }
     _ =>
       raise CodegenError(
         "Unsupported array type in get array codegen: \{arr_ty}",
@@ -542,36 +521,10 @@ fn Context::put_array(
       } else {
         value
       }
-      match ty {
-        Int => {
-          let _ = self.builder.createCall(
-            self.builtin_funcs.get("array_int_put").unwrap(),
-            [array, index_value, value_actual],
-          )
+      let elem_llvm_ty = self.type_codegen_opaque(ty)
+      let elem_ptr = self.builder.createGEP(array, elem_llvm_ty, [index_value])
+      let _ = self.builder.createStore(value_actual, elem_ptr)
 
-        }
-        Double => {
-          let _ = self.builder.createCall(
-            self.builtin_funcs.get("array_double_put").unwrap(),
-            [array, index_value, value_actual],
-          )
-
-        }
-        Bool => {
-          let _ = self.builder.createCall(
-            self.builtin_funcs.get("array_bool_put").unwrap(),
-            [array, index_value, value_actual],
-          )
-
-        }
-        _ => {
-          let _ = self.builder.createCall(
-            self.builtin_funcs.get("array_ptr_put").unwrap(),
-            [array, index_value, value_actual],
-          )
-
-        }
-      }
     }
     _ =>
       raise CodegenError(
