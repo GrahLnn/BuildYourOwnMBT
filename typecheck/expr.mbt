@@ -12,6 +12,7 @@ pub(all) enum ExprKind {
   NegExpr(Expr)
   BinaryExpr(BinaryOp, Expr, Expr)
   IfExpr(IfExpr)
+  MatchExpr(MatchExpr)
 } derive(Show)
 
 ///|
@@ -120,6 +121,10 @@ pub fn Context::check_expr(
       let expr = self.check_if_expr(if_expr)
       Expr::{ kind: IfExpr(expr), ty: expr.ty }
     }
+    MatchExpr(match_expr) => {
+      let expr = self.check_match_expr(match_expr)
+      Expr::{ kind: MatchExpr(expr), ty: expr.ty }
+    }
     BlockExpr(block_expr) => {
       let expr = self.check_block_expr(block_expr)
       Expr::{ kind: BlockExpr(expr), ty: expr.ty }
@@ -195,6 +200,10 @@ fn Context::substitute_expr(
     IfExpr(if_expr) => {
       let expr = self.substitute_if_expr(if_expr)
       Expr::{ kind: IfExpr(expr), ty: self.analysis_type(expr.ty) }
+    }
+    MatchExpr(match_expr) => {
+      let expr = self.substitute_match_expr(match_expr)
+      Expr::{ kind: MatchExpr(expr), ty: self.analysis_type(expr.ty) }
     }
     BlockExpr(block_expr) => {
       let expr = self.substitute_block_expr(block_expr)

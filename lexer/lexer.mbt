@@ -13,6 +13,7 @@ pub(all) enum Keyword {
   While
   For
   Return
+  Match
 } derive(Show, Eq)
 
 ///|
@@ -27,6 +28,7 @@ let keywords : Map[String, Keyword] = {
   "while": While,
   "for": For,
   "return": Return,
+  "match": Match,
 }
 
 ///|

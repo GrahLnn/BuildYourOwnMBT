@@ -11,6 +11,7 @@ pub(all) enum ExprKind {
   NegExpr(Expr)
   BinaryExpr(BinaryOp, Expr, Expr)
   IfExpr(IfExpr)
+  MatchExpr(MatchExpr)
 } derive(Show, Eq)
 
 ///|
@@ -98,6 +99,10 @@ pub fn parse_expr(
     [{ kind: Keyword(If) }, ..] as tks => {
       let (e, r) = parse_if_expr(tks)
       (expr(IfExpr(e)), r)
+    }
+    [{ kind: Keyword(Match) }, .. rest] => {
+      let (s, r) = parse_match_expr(rest)
+      (expr(MatchExpr(s)), r)
     }
     [{ kind: Bracket('{') }, ..] as tks => {
       let (e, r) = parse_block_expr(tks)

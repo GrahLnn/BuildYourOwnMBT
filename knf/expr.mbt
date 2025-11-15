@@ -10,12 +10,15 @@ pub(all) enum KnfExpr {
   Neg(Name)
   Binary(BinaryOp, Name, Name)
   If(KnfExpr, KnfBlock, KnfBlock)
+  Match(KnfExpr, Array[KnfMatchArm])
   Block(KnfBlock)
   Call(Name, Array[Name])
   ArrayAccess(Name, Name)
   FieldAccess(Name, String)
   TupleAccess(Name, Int)
   CreateStruct(String, Array[(String, Name)])
+  CreateEnum(String, Array[Name])
+  EnumAccess(Name, Int)
   ArrayLiteral(Type, Array[Name])
   ArrayMake(Name, Name)
   TupleLiteral(Array[Name])
@@ -118,6 +121,7 @@ pub fn Context::expr_to_knf(
       (lst + rs, Binary(binop_to_knf(binop), lname, rname))
     }
     IfExpr(expr) => self.if_expr_to_knf(expr)
+    MatchExpr(expr) => self.match_expr_to_knf(expr)
     BlockExpr(block) => ([], Block(self.block_expr_to_knf(block)))
   }
 }
@@ -190,6 +194,12 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
         "if \{cond_str} \{then_str} else \{else_str}"
       }
     }
+    Match(expr, arms) => {
+      let expr_str = expr.to_string()
+      let arms_strs = arms.map(arm => arm.to_string(ident)).join(";\n")
+      "match \{expr_str} {\n\{arms_strs}\n}"
+    }
+    _ => "<unknown>"
   }
 }
 
