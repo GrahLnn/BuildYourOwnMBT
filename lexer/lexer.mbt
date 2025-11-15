@@ -5,6 +5,7 @@ pub(all) suberror TokenizeError String derive(Show)
 pub(all) enum Keyword {
   Fn
   Struct
+  Enum
   Let
   Mut
   If
@@ -18,6 +19,7 @@ pub(all) enum Keyword {
 let keywords : Map[String, Keyword] = {
   "fn": Fn,
   "struct": Struct,
+  "enum": Enum,
   "let": Let,
   "mut": Mut,
   "if": If,
