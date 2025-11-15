@@ -36,7 +36,9 @@ pub fn parse_atom_expr(
     [{ kind: Bracket('(') }, ..] as tks => parse_paren_expr(tks)
     [{ kind: Bracket('[') }, ..] as tks => parse_array_expr(tks)
     [{ kind: Upper("Array") }, ..] as tks => parse_array_make_expr(tks)
-    [{ kind: Upper(_) }, ..] as tks => parse_struct_construct(tks)
+    [{ kind: Upper(_) }, { kind: Symbol("::") }, ..] as tks =>
+      parse_struct_construct(tks)
+    [{ kind: Upper(name) }, .. rest] => (atom_e(Ident(name)), rest)
     _ => raise ParseError("Unexpected atom, found \{tokens[0]}")
   }
 }
