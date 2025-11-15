@@ -3,6 +3,7 @@ pub(all) struct Program {
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
   struct_defs : Map[String, StructDef]
+  enum_defs : Map[String, EnumDef]
 } derive(Show)
 
 ///|
@@ -10,6 +11,7 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
   let top_lets = Map::new()
   let top_functions = Map::new()
   let struct_defs = Map::new()
+  let enum_defs = Map::new()
   loop tokens[:] {
     [{ kind: Keyword(Fn) }, ..] as tokens => {
       let (top_fn, rest) = parse_top_function(tokens)
@@ -26,9 +28,14 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
       struct_defs.set(struct_def.name, struct_def)
       continue rest
     }
+    [{ kind: Keyword(Enum) }, ..] as tokens => {
+      let (enum_def, rest) = parse_enum_def(tokens)
+      enum_defs.set(enum_def.name, enum_def)
+      continue rest
+    }
     [{ kind: EOF }, ..] => break
     [] => panic()
     tokens => raise ParseError("Unexpected token in top level: \{tokens[0]}")
   }
-  Program::{ top_lets, top_functions, struct_defs }
+  Program::{ top_lets, top_functions, struct_defs, enum_defs }
 }
