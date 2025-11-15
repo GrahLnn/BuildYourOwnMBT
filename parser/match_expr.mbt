@@ -35,8 +35,10 @@ fn ap(kind : ArmPatternKind) -> ArmPattern {
 pub fn parse_match_expr(
   tokens : ArrayView[Token],
 ) -> (MatchExpr, ArrayView[Token]) raise ParseError {
-  guard tokens is [{ kind: Keyword(Match) }, .. tokens]
-  let (expr, rest) = parse_expr(tokens)
+  guard tokens is [{ kind: Keyword(Match) }, .. rest] else {
+    raise ParseError("Expected 'match' found \{tokens[0].kind} in \{tokens}")
+  }
+  let (expr, rest) = parse_expr(rest)
   guard rest is [{ kind: Bracket('{') }, .. rest] else {
     raise ParseError("Expected '{' after 'match'")
   }
