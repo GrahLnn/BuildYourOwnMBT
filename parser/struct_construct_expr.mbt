@@ -23,8 +23,12 @@ pub fn parse_struct_construct(
           [{ kind: Lower(name) }, .. rest] => (name, rest)
           _ => raise ParseError("Expect field name")
         }
-        guard rest is [{ kind: Symbol(":") }, .. rest]
-        let (expr, rest) = parse_expr(rest)
+        guard rest is [{ kind: Symbol(":") }, .. rest1] else {
+          raise ParseError(
+            "Expect ':' after field name found: \{rest[0]} in \{tokens}",
+          )
+        }
+        let (expr, rest) = parse_expr(rest1)
         items.push((name, expr))
         continue rest
       }

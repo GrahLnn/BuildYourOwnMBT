@@ -76,33 +76,27 @@
 ///|
 test "Codegen Closure Test" {
   let code =
-    #|fn counter(arr: Array[Int], arr_size: Int, cond: Array[(Int) -> Bool], cond_size: Int) -> Int {
-    #|  let mut cnt = 0;
-    #|  let mut i = 0;
-    #|  while i < arr_size {
-    #|    let mut j = 0;
-    #|    while j < cond_size {
-    #|      if cond[j](arr[i]) {
-    #|        cnt = cnt + 1;
-    #|      };
-    #|      j = j + 1;
-    #|    }
-    #|    i = i + 1;
+    #|fn is_even(n : Int) -> Bool {
+    #|  if n == 0 {
+    #|    true
+    #|  } else {
+    #|    is_odd(n - 1)
     #|  }
-    #|  cnt
     #|}
-    #|
+    #|fn is_odd(n : Int) -> Bool {
+    #|  if n == 0 {
+    #|    false
+    #|  } else {
+    #|    is_even(n - 1)
+    #|  }
+    #|}
     #|fn main {
-    #|  fn f(x) { x > 0 }
-    #|  fn g(x) { x < 400 }
-    #|
-    #|  let arr = [1, 4, 9, 1000, 2500, 3150, 4000, 748, 45, -275, -115, 33];
-    #|  let cond = [f, g];
-    #|
-    #|  let arr_size = 12;
-    #|  let cond_size = 2;
-    #|
-    #|  let result = counter(arr, arr_size, cond, cond_size);
+    #|  let result = is_even(10)
+    #|  if result {
+    #|    println("10 is even")
+    #|  } else {
+    #|    println("10 is odd")
+    #|  }
     #|}
   let tokens = @lexer.tokenize(code)
   let ast = @parser.parse(tokens)
