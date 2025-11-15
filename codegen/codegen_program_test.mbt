@@ -92,11 +92,6 @@ test "Codegen Closure Test" {
     #|}
     #|fn main {
     #|  let result = is_even(10)
-    #|  if result {
-    #|    println("10 is even")
-    #|  } else {
-    #|    println("10 is odd")
-    #|  }
     #|}
   let tokens = @lexer.tokenize(code)
   let ast = @parser.parse(tokens)

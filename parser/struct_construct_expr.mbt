@@ -12,7 +12,11 @@ pub fn parse_struct_construct(
     [{ kind: Upper(name) }, .. rest] => (name, rest)
     _ => raise ParseError("Expect struct name")
   }
-  guard rest is [{ kind: Symbol("::") }, { kind: Bracket('{') }, .. rest]
+  guard rest is [{ kind: Symbol("::") }, { kind: Bracket('{') }, .. rest] else {
+    raise ParseError(
+      "Expect '::{' after struct name found: \{rest[0]} in \{tokens}",
+    )
+  }
   let (fields, rest) = {
     let items = Array::new()
     loop rest {
