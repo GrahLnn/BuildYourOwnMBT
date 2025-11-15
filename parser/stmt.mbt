@@ -62,7 +62,7 @@ pub fn parse_stmt(
           } else if r is [{ kind: Bracket('}') }, ..] {
             stmt((ExprStmt(s), r))
           } else {
-            raise ParseError("Expected ';' or '}', found \{r[0].kind}")
+            raise ParseError("Expected ';' or '}', found \{r[0].kind} in \{r}")
           }
         }
       }
