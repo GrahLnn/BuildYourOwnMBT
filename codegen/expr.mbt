@@ -624,16 +624,16 @@ fn Context::make_array(
       |> Some
     Double =>
       self.builder.createCall(
-        self.builtin_funcs.get("make_double_array").unwrap(),
+        self.builtin_funcs.get("make_float_array").unwrap(),
         [size, init],
       )
       |> Some
-    Bool =>
-      self.builder.createCall(
-        self.builtin_funcs.get("make_bool_array").unwrap(),
-        [size, init],
-      )
-      |> Some
+    // Bool =>
+    //   self.builder.createCall(
+    //     self.builtin_funcs.get("make_bool_array").unwrap(),
+    //     [size, init],
+    //   )
+    //   |> Some
     _ =>
       self.builder.createCall(
         self.builtin_funcs.get("make_ptr_array").unwrap(),
