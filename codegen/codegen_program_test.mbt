@@ -109,7 +109,7 @@ test "Codegen Closure Test" {
   let tokens = @lexer.tokenize(code)
   let ast = @parser.parse(tokens)
   let typed_ast = @typecheck.typecheck(ast)
-  // println(typed_ast.enum_defs)
+  println(typed_ast.enum_defs)
   let knf_prog = @knf.knf_transform(typed_ast)
   println(knf_prog)
   let llvm_mod = codegen(knf_prog)

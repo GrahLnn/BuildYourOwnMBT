@@ -3,7 +3,7 @@ pub(all) struct KnfProgram {
   struct_defs : Map[String, KnfStructDef]
   top_lets : Map[String, KnfTopLet]
   functions : Map[String, KnfFunction]
-  // enum_defs : Map[String, KnfEnumDef]
+  enum_defs : Map[String, KnfEnumDef]
 }
 
 ///|
@@ -20,9 +20,9 @@ pub fn Context::program_to_knf(
     k,
     self.top_function_to_knf(v),
   ))
-  // let enums_def = Map::new()
-  // prog.enum_defs.each((k, v) => enums_def.set(k, self.enum_def_to_knf(v)))
-  KnfProgram::{ struct_defs, top_lets, functions }
+  let enum_defs = Map::new()
+  prog.enum_defs.each((k, v) => enum_defs.set(k, self.enum_def_to_knf(v)))
+  KnfProgram::{ struct_defs, top_lets, functions, enum_defs }
 }
 
 ///|
@@ -45,6 +45,16 @@ pub fn knf_transform(
   context.globals.set("sin", Function([Double], Double))
   context.globals.set("cos", Function([Double], Double))
   context.globals.set("atan", Function([Double], Double))
+  prog.enum_defs.each((ename, edef) => edef.variants.each(variant => {
+    let vname = variant.name
+    // variant.fields 是 Array[@typecheck.Type]
+    let field_tys = variant.fields.map(ft => context.type_to_knf(ft))
+    let ctor_ty = match field_tys.length() {
+      0 => Struct(ename)
+      _ => Function(field_tys, Struct(ename))
+    }
+    context.globals.set(vname, ctor_ty)
+  }))
   context.program_to_knf(prog)
 }
 

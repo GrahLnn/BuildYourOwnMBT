@@ -54,6 +54,7 @@ pub fn Context::typekind_to_knf(
     String => String
     Array(elem_type) => Array(self.typekind_to_knf(elem_type))
     Struct(name) => Struct(name)
+    // Enum(name) => Enum(name)
     Tuple(elem_types) => Tuple(elem_types.map(et => self.typekind_to_knf(et)))
     Function(param_types, ret_type) =>
       Function(

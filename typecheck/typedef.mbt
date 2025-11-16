@@ -73,7 +73,6 @@ pub fn Context::deref_type(
   ty : TypeKind,
   init_id? : Int,
 ) -> TypeKind raise TypeCheckError {
-  // println("deref_type \{ty} \{init_id}")
   match ty {
     TypeVar(id) => {
       let root = match init_id {

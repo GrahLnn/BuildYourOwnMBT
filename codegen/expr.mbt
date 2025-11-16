@@ -518,8 +518,94 @@ pub fn Context::expr_codegen(
         }
       }
     }
-    _ => raise CodegenError("not impl")
+    Match(scrut, arms) => self.match_codegen(scrut, arms)
+    _ => raise CodegenError("not impl for \{expr}")
   }
+}
+
+///|
+fn Context::match_codegen(
+  self : Context,
+  scrut : @knf.KnfExpr,
+  arms : Array[@knf.KnfMatchArm],
+) -> &@llvm.Value? raise {
+  // 1. 先算出 scrutinee 的值
+  let scrut_val_opt = self.expr_codegen(scrut)
+  let scrut_val = match scrut_val_opt {
+    Some(v) => v
+    None => raise CodegenError("match scrutinee has unit type, not supported")
+  }
+  let func = self.builder.getInsertFunction()
+
+  // 2. 建每个分支的 basic block 和 merge 块
+  let arm_blocks = Array::new()
+  arms.eachi((idx, _) => {
+    let blk = func.addBasicBlock()
+    arm_blocks.push(blk)
+  })
+  let merge_block = func.addBasicBlock()
+
+  // 保存当前 block 作为 dispatch 起点
+  let dispatch_block = self.builder.getInsertBlock()
+
+  // 3. 构造 dispatch 逻辑. 目前先写成 if 链. switch 放后面再优化
+  // 后面根据 pattern 决定跳到哪个 arm_block
+  self.builder.setInsertPoint(dispatch_block)
+
+  // 这里先占一个“永远跳第一个 arm 的假实现”. 等会替换
+  let _ = scrut_val
+  let _ = self.builder.createBr(arm_blocks[0])
+
+  // 4. 在每个 arm block 里生成 binders + arm 表达式. 然后跳 merge
+  let results : Array[&@llvm.Value] = Array::new()
+  let result_blocks = Array::new()
+  arms.eachi((idx, arm) => {
+    let arm_block = arm_blocks[idx]
+    self.builder.setInsertPoint(arm_block)
+
+    // 4.1 生成 binder 里的 let
+    arm.binders.each(stmt => self.stmt_codegen(stmt))
+
+    // 4.2 如当前块尚未终结, 生成 arm 本体表达式
+    let arm_end_bb_before = self.builder.getInsertBlock()
+    let arm_terminated_before = match arm_end_bb_before.getTerminator() {
+      Some(_) => true
+      None => false
+    }
+    if !arm_terminated_before {
+      let arm_val_opt = self.expr_codegen(arm.arm)
+      let arm_end_bb = self.builder.getInsertBlock()
+      let arm_terminated = match arm_end_bb.getTerminator() {
+        Some(_) => true
+        None => false
+      }
+      if !arm_terminated {
+        let arm_val = match arm_val_opt {
+          Some(v) => v
+          None =>
+            // match 表达式的 arm 没返回值. 这里就用 unit 表示. 目前不支持
+            raise CodegenError("match arm returns unit, not supported")
+        }
+        results.push(arm_val)
+        result_blocks.push(arm_end_bb)
+
+        // 4.3 跳到 merge
+        let _ = self.builder.createBr(merge_block)
+
+      }
+    }
+  })
+
+  // 5. 在 merge 块里合并所有结果
+  if results.length() == 0 {
+    merge_block.removeFromParent()
+    return None
+  }
+  self.builder.setInsertPoint(merge_block)
+  let res_ty = results[0].getType()
+  let phi = self.builder.createPHI(res_ty)
+  results.eachi((idx, v) => phi.addIncoming(v, result_blocks[idx]))
+  phi |> Some
 }
 
 ///|

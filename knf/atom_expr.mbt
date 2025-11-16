@@ -9,29 +9,10 @@ pub fn Context::atom_expr_to_knf(
     Bool(b) => (Array::new(), Bool(b))
     String(s) => (Array::new(), String(s))
     Ident(name) =>
-      // ① 先按普通变量/函数名查一遍
       match self.lookup_name(name) {
-        Some((n, _ty)) =>
-          // 普通局部/全局. 按原逻辑走
-          (Array::new(), Ident(n))
-        None => {
-          println(atom_expr)
-          raise KnfTransformError("Unknown identifier: \{name}")
-          // ② 查不到. 看类型是不是枚举
-          // match atom_expr.ty {
-          //   // 这里根据你自己的 TypeKind 定义调一下 pattern
-          //   Enum(enum_name) =>
-          //     // 零参枚举 Red/Green/Blue
-          //     (Array::new(), EnumNullary(enum_name, name))
-
-          //   // 如果你 TypeKind 写的是 Enum(String, ..) 之类. 就匹配成:
-          //   // Enum(enum_name, ..) => (Array::new(), EnumNullary(enum_name, name))
-
-          //   _ =>
-          //     // 真·未定义名字
-          //     raise KnfTransformError("Unknown identifier: \{name}")
-          // }
-        }
+        Some((n, _ty)) => (Array::new(), Ident(n))
+        None =>
+          raise KnfTransformError("Unknown identifier: \{name} \{atom_expr}")
       }
     Unit => (Array::new(), Unit)
     Paren(expr) => self.expr_to_knf(expr)

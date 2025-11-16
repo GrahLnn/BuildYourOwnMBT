@@ -92,7 +92,7 @@ pub(all) struct Program {
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
   struct_defs : Map[String, StructDef]
-  enum_defs : Map[String, @parser.EnumDef]
+  enum_defs : Map[String, EnumDef]
 } derive(Show)
 
 ///|
@@ -111,7 +111,7 @@ pub fn Context::check_program(
     self.check_struct_def(s),
   ))
   let enum_defs = Map::new()
-  program.enum_defs.each((n, e) => enum_defs.set(n, e))
+  program.enum_defs.each((n, e) => enum_defs.set(n, self.check_enum_def(e)))
   let top_functions = Map::new()
   program.top_functions.each((n, s) => top_functions.set(
     n,

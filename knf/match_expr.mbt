@@ -8,12 +8,18 @@ pub(all) struct KnfMatchArm {
 ///|
 pub fn KnfMatchArm::to_string(self : Self, ident : Int) -> String {
   let sb = StringBuilder::new()
+  // 先打印 pattern
+  sb.write_string(self.pattern.kind.to_string())
+  sb.write_string(" => {")
   sb.write_string("\n")
+  // 再打印 binders
   sb.write_string(
-    self.binders.map(stmt => stmt.to_string(ident=ident + 2)).join(";"),
+    self.binders.map(stmt => stmt.to_string(ident=ident + 2)).join("\n"),
   )
   sb.write_string("\n")
+  // 最后打印 arm 表达式
   sb.write_string(self.arm.to_string())
+  sb.write_string("\n}")
   sb.to_string()
 }
 
