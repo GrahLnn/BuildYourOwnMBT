@@ -3,6 +3,7 @@ pub(all) struct KnfProgram {
   struct_defs : Map[String, KnfStructDef]
   top_lets : Map[String, KnfTopLet]
   functions : Map[String, KnfFunction]
+  // enum_defs : Map[String, KnfEnumDef]
 }
 
 ///|
@@ -19,6 +20,8 @@ pub fn Context::program_to_knf(
     k,
     self.top_function_to_knf(v),
   ))
+  // let enums_def = Map::new()
+  // prog.enum_defs.each((k, v) => enums_def.set(k, self.enum_def_to_knf(v)))
   KnfProgram::{ struct_defs, top_lets, functions }
 }
 

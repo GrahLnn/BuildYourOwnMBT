@@ -57,7 +57,6 @@ pub fn Context::substitute_type_var(
     n,
     self.substitute_top_function(e),
   ))
-  println(program.enum_defs)
   Program::{
     top_lets,
     top_functions,

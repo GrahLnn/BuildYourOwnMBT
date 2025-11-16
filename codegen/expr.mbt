@@ -60,19 +60,65 @@ pub fn Context::expr_codegen(
           } else {
             Some(value)
           }
-        None => {
-          let gvar = self.global_lets
-            .get(name)
-            .unwrap_or_else(() => raise CodegenError(
-              "Undefined identifier in codegen: \{name}",
-            ))
-          let ty = self.global_lets_types.get(name).unwrap()
-          let loaded = self.builder.createLoad(
-            self.type_codegen_opaque(ty),
-            gvar,
-          )
-          Some(loaded)
-        }
+        None =>
+          match self.global_lets.get(name) {
+            Some(gvar) => {
+              let ty = self.global_lets_types.get(name).unwrap()
+              let loaded = self.builder.createLoad(
+                self.type_codegen_opaque(ty),
+                gvar,
+              )
+              Some(loaded)
+            }
+            None => {
+              let fname = name.id
+              match self.functions.get(fname) {
+                Some(func_val) => {
+                  let ptrty = self.llvm_ctx.getPtrTy()
+                  let closure_struct_ty = self.llvm_ctx.getStructType([
+                    ptrty, ptrty,
+                  ])
+                  let layout = self.llvm_mod
+                    .getDataLayout()
+                    .getTypeAllocSize(closure_struct_ty)
+                  let closure_ptr = self.builder.createCall(
+                    self.builtin_funcs.get("moonbit_malloc").unwrap(),
+                    [self.llvm_ctx.getConstInt32(layout)],
+                  )
+                  let func_ptr_field = self.builder.createGEP(
+                    closure_ptr,
+                    closure_struct_ty,
+                    [
+                      self.llvm_ctx.getConstInt32(0),
+                      self.llvm_ctx.getConstInt32(0),
+                    ],
+                  )
+                  let _ = self.builder.createStore(func_val, func_ptr_field)
+                  let env_field = self.builder.createGEP(
+                    closure_ptr,
+                    closure_struct_ty,
+                    [
+                      self.llvm_ctx.getConstInt32(0),
+                      self.llvm_ctx.getConstInt32(1),
+                    ],
+                  )
+                  let _ = self.builder.createStore(
+                    self.llvm_ctx.getConstPointerNull(ptrty),
+                    env_field,
+                  )
+                  Some(closure_ptr)
+                }
+                None =>
+                  match self.builtin_funcs.get(fname) {
+                    Some(builtin) => Some(builtin)
+                    None =>
+                      raise CodegenError(
+                        "Undefined identifier in codegen: \{name}",
+                      )
+                  }
+              }
+            }
+          }
       }
     }
     Binary(op, lname, rname) => {
