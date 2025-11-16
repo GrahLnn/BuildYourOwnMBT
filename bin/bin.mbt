@@ -22,24 +22,20 @@ fn ensure_parent_dir(path : String) -> Unit {
 }
 
 ///|
-// pub(all) suberror CheckRuntimeError String derive(Show)
+pub(all) suberror CheckRuntimeError String derive(Show)
 
-// ///|
-// fn check_runtime() -> Unit raise CheckRuntimeError {
-//   if @fs.path_exists("/test_case/codegen/even-odd.mbt") {
-//     try {
-//       let content = @fs.read_file_to_string("/test_case/codegen/even-odd.mbt")
-//       raise CheckRuntimeError("DEBUG: " + content)
-//     } catch {
-//       e =>
-//         raise CheckRuntimeError(
-//           "DEBUG: Failed to read runtime.a: " + e.to_string(),
-//         )
-//     }
-//   } else {
-//     raise CheckRuntimeError("DEBUG: /runtime/runtime.a does NOT exist")
-//   }
-// }
+///|
+fn check_runtime() -> Unit raise CheckRuntimeError {
+  try {
+    let content = @fs.read_file_to_string("/test_case/codegen/non-tail-if.mbt")
+    raise CheckRuntimeError("DEBUG: " + content)
+  } catch {
+    e =>
+      raise CheckRuntimeError(
+        "DEBUG: Failed to read runtime.a: " + e.to_string(),
+      )
+  }
+}
 
 ///|
 fn main {
@@ -85,6 +81,7 @@ fn main {
   // B. --typecheck 模式
   if typecheck_only.val {
     try {
+      check_runtime()
       let src = @fs.read_file_to_string(input)
       let toks = @lexer.tokenize(src)
       let ast = @parser.parse(toks)
