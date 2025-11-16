@@ -51,15 +51,24 @@ pub fn Context::new(mod_name : String) -> Context {
     print_bool_ty, "minimbt_print_bool",
   )
   let make_int_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, i32ty])
-  // let make_double_array_ty = try! llvm_ctx.getFunctionType(ptrty, [
-  //     i32ty, doublety,
-  //   ])
+  let make_double_array_ty = try! llvm_ctx.getFunctionType(ptrty, [
+    i32ty, doublety,
+  ])
   // let make_bool_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, boolty])
   let make_ptr_array_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty, ptrty])
   let get_array_length_ty = try! llvm_ctx.getFunctionType(i32ty, [ptrty])
   let array_int_push_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
     ptrty, i32ty,
   ])
+  let truncate_ty = try! llvm_ctx.getFunctionType(i32ty, [doublety])
+  let int_of_float_ty = try! llvm_ctx.getFunctionType(i32ty, [doublety])
+  let float_of_int_ty = try! llvm_ctx.getFunctionType(doublety, [i32ty])
+  let floor_ty = try! llvm_ctx.getFunctionType(i32ty, [doublety])
+  let abs_float_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
+  let sqrt_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
+  let sin_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
+  let cos_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
+  let atan_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
   let array_double_push_ty = try! llvm_ctx.getFunctionType(
     llvm_ctx.getVoidTy(),
     [ptrty, doublety],
@@ -91,15 +100,29 @@ pub fn Context::new(mod_name : String) -> Context {
   let make_int_array = try! llvm_mod.addFunction(
     make_int_array_ty, "minimbt_create_array",
   )
-  // let make_double_array = try! llvm_mod.addFunction(
-  //     make_double_array_ty, "minimbt_create_array",
-  //   )
-  // let make_bool_array = try! llvm_mod.addFunction(
-  //     make_bool_array_ty, "make_bool_array",
-  //   )
+  let make_double_array = try! llvm_mod.addFunction(
+    make_double_array_ty, "minimbt_create_float_array",
+  )
   let make_ptr_array = try! llvm_mod.addFunction(
     make_ptr_array_ty, "minimbt_create_ptr_array",
   )
+  let minimbt_truncate = try! llvm_mod.addFunction(
+    truncate_ty, "minimbt_truncate",
+  )
+  let minimbt_int_of_float = try! llvm_mod.addFunction(
+    int_of_float_ty, "minimbt_int_of_float",
+  )
+  let minimbt_float_of_int = try! llvm_mod.addFunction(
+    float_of_int_ty, "minimbt_float_of_int",
+  )
+  let minimbt_floor = try! llvm_mod.addFunction(floor_ty, "minimbt_floor")
+  let minimbt_abs_float = try! llvm_mod.addFunction(
+    abs_float_ty, "minimbt_abs_float",
+  )
+  let minimbt_sqrt = try! llvm_mod.addFunction(sqrt_ty, "minimbt_sqrt")
+  let minimbt_sin = try! llvm_mod.addFunction(sin_ty, "minimbt_sin")
+  let minimbt_cos = try! llvm_mod.addFunction(cos_ty, "minimbt_cos")
+  let minimbt_atan = try! llvm_mod.addFunction(atan_ty, "minimbt_atan")
   let get_array_length = try! llvm_mod.addFunction(
     get_array_length_ty, "get_array_length",
   )
@@ -145,10 +168,18 @@ pub fn Context::new(mod_name : String) -> Context {
     "print_double": print_double,
     "print_bool": print_bool,
     "make_int_array": make_int_array,
-    // "make_double_array": make_double_array,
-    // "make_bool_array": make_bool_array,
+    "make_float_array": make_double_array,
     "make_ptr_array": make_ptr_array,
     "get_array_length": get_array_length,
+    "truncate": minimbt_truncate,
+    "int_of_float": minimbt_int_of_float,
+    "float_of_int": minimbt_float_of_int,
+    "floor": minimbt_floor,
+    "abs_float": minimbt_abs_float,
+    "sqrt": minimbt_sqrt,
+    "sin": minimbt_sin,
+    "cos": minimbt_cos,
+    "atan": minimbt_atan,
     "array_int_push": array_int_push,
     "array_double_push": array_double_push,
     "array_bool_push": array_bool_push,

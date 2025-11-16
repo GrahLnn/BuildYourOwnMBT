@@ -28,7 +28,13 @@ pub fn typecheck(program : @parser.Program) -> Program raise TypeCheckError {
     ("array_ptr_put", Function([Array(Any), Int, Any], Unit)),
     ("int_of_float", Function([Double], Int)),
     ("float_of_int", Function([Int], Double)),
-    ("truncate", Function([Double], Double)),
+    ("truncate", Function([Double], Int)),
+    ("floor", Function([Double], Int)),
+    ("abs_float", Function([Double], Double)),
+    ("sqrt", Function([Double], Double)),
+    ("sin", Function([Double], Double)),
+    ("cos", Function([Double], Double)),
+    ("atan", Function([Double], Double)),
   ]
   builtins.each(fn(item) {
     let (name, ty) = item

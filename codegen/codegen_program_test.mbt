@@ -151,3 +151,24 @@ test "Codegen add Test" {
   let llvm_mod = codegen(knf_prog)
   println(llvm_mod)
 }
+
+///|
+test "Codegen non-tail-if Test" {
+  let code =
+    #|fn main {
+    #|  let x = truncate(1.23);
+    #|  let y = truncate(4.56);
+    #|  let z = truncate(-7.89);
+    #|  print_int(
+    #|    (if 0 <= z { x } else { y }) +
+    #|    (if x <= 0 { y } else { z }) +
+    #|    (if 0 <= y { z } else { x })
+    #|  )
+    #|}
+  let tokens = @lexer.tokenize(code)
+  let ast = @parser.parse(tokens)
+  let typed_ast = @typecheck.typecheck(ast)
+  let knf_prog = @knf.knf_transform(typed_ast)
+  let llvm_mod = codegen(knf_prog)
+  println(llvm_mod)
+}
