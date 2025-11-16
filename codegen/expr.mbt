@@ -1,4 +1,25 @@
 ///|
+fn Context::const_expr_codegen(
+  self : Context,
+  expr : @knf.KnfExpr,
+) -> &@llvm.Constant raise {
+  match expr {
+    Int(i) => (self.llvm_ctx.getConstInt32(i) : &@llvm.Constant)
+    Double(d) => self.llvm_ctx.getConstDouble(d)
+    Bool(b) =>
+      if b {
+        self.llvm_ctx.getConstTrue()
+      } else {
+        self.llvm_ctx.getConstFalse()
+      }
+    _ =>
+      raise CodegenError(
+        "Top-level let initializer must be a constant expression. got: \{expr}",
+      )
+  }
+}
+
+///|
 ///
 /// 注意这里的expr_codegen的返回值是Option[&@llvm.Value]
 /// 对于Unit类型的表达式，应当返回None做特殊处理。
@@ -27,16 +48,31 @@ pub fn Context::expr_codegen(
     Unit => None
     Ident(name) => {
       let value = self.name_values.get(name)
-      guard value is Some(value) else { return None }
-      if value.asValueEnum() is AllocaInst(ptr) {
-        Some(
-          self.builder.createLoad(
-            self.type_codegen_opaque(self.name_types.get(name).unwrap()),
-            ptr,
-          ),
-        )
-      } else {
-        Some(value)
+      match value {
+        Some(value) =>
+          if value.asValueEnum() is AllocaInst(ptr) {
+            Some(
+              self.builder.createLoad(
+                self.type_codegen_opaque(self.name_types.get(name).unwrap()),
+                ptr,
+              ),
+            )
+          } else {
+            Some(value)
+          }
+        None => {
+          let gvar = self.global_lets
+            .get(name)
+            .unwrap_or_else(() => raise CodegenError(
+              "Undefined identifier in codegen: \{name}",
+            ))
+          let ty = self.global_lets_types.get(name).unwrap()
+          let loaded = self.builder.createLoad(
+            self.type_codegen_opaque(ty),
+            gvar,
+          )
+          Some(loaded)
+        }
       }
     }
     Binary(op, lname, rname) => {

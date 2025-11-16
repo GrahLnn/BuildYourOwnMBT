@@ -11,7 +11,8 @@ pub struct Context {
   struct_types : Map[String, @llvm.StructType]
   knf_struct_types : Map[String, @knf.KnfStructDef]
   functions : Map[String, @llvm.Function]
-
+  global_lets : Map[@knf.Name, &@llvm.Value]
+  global_lets_types : Map[@knf.Name, @knf.Type]
   // mut the follow two if neccessary
   name_values : Map[@knf.Name, &@llvm.Value]
   name_types : Map[@knf.Name, @knf.Type]
@@ -170,6 +171,8 @@ pub fn Context::new(mod_name : String) -> Context {
     struct_types: Map::new(),
     knf_struct_types: Map::new(),
     functions: Map::new(),
+    global_lets: Map::new(),
+    global_lets_types: Map::new(),
     name_values: Map::new(),
     name_types: Map::new(),
     builtin_funcs,

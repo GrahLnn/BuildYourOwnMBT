@@ -102,6 +102,7 @@ pub fn Context::check_program(
 ) -> Program raise TypeCheckError {
   program.enum_defs.each((n, e) => self.enum_defs.set(n, e))
   self.collect_struct_names(program)
+  self.collect_enum_constructors(program)
   self.collect_top_lets(program)
   self.collect_function_types(program)
   let struct_defs = Map::new()
@@ -119,6 +120,25 @@ pub fn Context::check_program(
   let top_lets = Map::new()
   program.top_lets.each((n, s) => top_lets.set(n, self.check_top_let(s)))
   Program::{ top_lets, top_functions, struct_defs, enum_defs }
+}
+
+///|
+pub fn Context::collect_enum_constructors(
+  self : Context,
+  program : @parser.Program,
+) -> Unit raise TypeCheckError {
+  for ed in program.enum_defs {
+    let (ename, enum_def) = ed
+    enum_def.variants.each(variant => {
+      let vname = variant.name
+      let field_kinds = variant.fields.map(t => self.check_parser_type(t).kind)
+      let ctor_kind = match field_kinds.length() {
+        0 => Struct(ename)
+        _ => Function(field_kinds, Struct(ename))
+      }
+      self.type_env.set(vname, Type::{ kind: ctor_kind, mutable: false })
+    })
+  }
 }
 
 ///|

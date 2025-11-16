@@ -73,6 +73,25 @@ pub fn Context::collect_func_values(
 }
 
 ///|
+pub fn Context::collect_top_let(
+  self : Context,
+  knf_lets : Map[String, @knf.KnfTopLet],
+) -> Unit raise {
+  for lname, let_knf in knf_lets {
+    let { name, ty, expr } = let_knf
+    let llvm_ty = self.type_codegen_opaque(ty)
+    let init_val = self.const_expr_codegen(expr)
+    let gvar = try! self.llvm_mod.addGlobalVariable(
+      llvm_ty,
+      lname,
+      initializer=init_val,
+    )
+    self.global_lets.set(name, gvar)
+    self.global_lets_types.set(name, ty)
+  }
+}
+
+///|
 /// 递归收集函数体中的所有闭包函数
 fn Context::collect_closures_in_block(
   self : Context,
