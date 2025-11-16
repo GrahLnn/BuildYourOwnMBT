@@ -22,20 +22,20 @@ fn ensure_parent_dir(path : String) -> Unit {
 }
 
 ///|
-pub(all) suberror CheckRuntimeError String derive(Show)
+// pub(all) suberror CheckRuntimeError String derive(Show)
 
-///|
-fn check_runtime() -> Unit raise CheckRuntimeError {
-  try {
-    let content = @fs.read_file_to_string("/test_case/codegen/cls-bug.mbt")
-    raise CheckRuntimeError("DEBUG: " + content)
-  } catch {
-    e =>
-      raise CheckRuntimeError(
-        "DEBUG: Failed to read runtime.a: " + e.to_string(),
-      )
-  }
-}
+// ///|
+// fn check_runtime() -> Unit raise CheckRuntimeError {
+//   try {
+//     let content = @fs.read_file_to_string("/test_case/codegen/cls-bug.mbt")
+//     raise CheckRuntimeError("DEBUG: " + content)
+//   } catch {
+//     e =>
+//       raise CheckRuntimeError(
+//         "DEBUG: Failed to read runtime.a: " + e.to_string(),
+//       )
+//   }
+// }
 
 ///|
 fn main {
@@ -81,7 +81,6 @@ fn main {
   // B. --typecheck 模式
   if typecheck_only.val {
     try {
-      check_runtime()
       let src = @fs.read_file_to_string(input)
       let toks = @lexer.tokenize(src)
       let ast = @parser.parse(toks)

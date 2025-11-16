@@ -13,6 +13,7 @@ pub fn Context::type_codegen_opaque(
     Tuple(_) => self.llvm_ctx.getPtrTy()
     Struct(_) => self.llvm_ctx.getPtrTy()
     Function(_) => self.llvm_ctx.getPtrTy()
+    Enum(_) => self.llvm_ctx.getPtrTy()
   }
 }
 
@@ -28,6 +29,7 @@ pub fn Context::type_codegen_concrete(
     Double => self.llvm_ctx.getDoubleTy()
     Array(_) => self.llvm_ctx.getPtrTy()
     String(_) => self.llvm_ctx.getPtrTy()
+    Enum(_) => self.llvm_ctx.getPtrTy()
     Tuple(elem_types) => {
       let llvm_elem_types = elem_types.map(elem_type => self.type_codegen_concrete(
         elem_type,

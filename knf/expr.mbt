@@ -18,7 +18,7 @@ pub(all) enum KnfExpr {
   TupleAccess(Name, Int)
   CreateStruct(String, Array[(String, Name)])
   CreateEnum(String, Array[Name])
-  EnumAccess(Name, Int)
+  EnumNullary(String, String)
   ArrayLiteral(Type, Array[Name])
   ArrayMake(Name, Name)
   TupleLiteral(Array[Name])

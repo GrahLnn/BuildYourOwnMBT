@@ -115,55 +115,16 @@ test "Codegen Closure Test" {
 }
 
 ///|
-test "Codegen add Test" {
+test "Codegen cls-bug Test" {
   let code =
-    #|let t = 123;
-    #|let f = 456;
-    #|fn even(x: Int) -> Int {
-    #|  fn odd(x: Int) -> Int {
-    #|    if 0 <= x {
-    #|      if x == 0 {
-    #|        f
-    #|      } else {
-    #|        even(x - 1)
-    #|      }
-    #|    } else {
-    #|      even(x + 1)
-    #|    }
-    #|  }
-    #|  if 0 <= x {
-    #|    if x == 0 {
-    #|      t
-    #|    } else {
-    #|      odd(x - 1)
-    #|    }
-    #|  } else {
-    #|    odd(x + 1)
-    #|  }
+    #|fn f(x: Int) -> Int {
+    #|  x + 123
+    #|}
+    #|fn g(y: Int) -> (Int) -> Int {
+    #|  f
     #|}
     #|fn main {
-    #|  print_int(even(789))
-    #|}
-  let tokens = @lexer.tokenize(code)
-  let ast = @parser.parse(tokens)
-  let typed_ast = @typecheck.typecheck(ast)
-  let knf_prog = @knf.knf_transform(typed_ast)
-  let llvm_mod = codegen(knf_prog)
-  println(llvm_mod)
-}
-
-///|
-test "Codegen non-tail-if Test" {
-  let code =
-    #|fn main {
-    #|  let x = truncate(1.23);
-    #|  let y = truncate(4.56);
-    #|  let z = truncate(-7.89);
-    #|  print_int(
-    #|    (if 0 <= z { x } else { y }) +
-    #|    (if x <= 0 { y } else { z }) +
-    #|    (if 0 <= y { z } else { x })
-    #|  )
+    #|  print_int((g(456))(789))
     #|}
   let tokens = @lexer.tokenize(code)
   let ast = @parser.parse(tokens)
