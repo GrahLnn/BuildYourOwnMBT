@@ -26,11 +26,9 @@ pub(all) suberror CheckRuntimeError String derive(Show)
 
 ///|
 fn check_runtime() -> Unit raise CheckRuntimeError {
-  if @fs.path_exists("/test_case/optional-enum-only/enum1.mbt") {
+  if @fs.path_exists("/test_case/codegen/even-odd.mbt") {
     try {
-      let content = @fs.read_file_to_string(
-        "/test_case/optional-enum-only/enum1.mbt",
-      )
+      let content = @fs.read_file_to_string("/test_case/codegen/even-odd.mbt")
       raise CheckRuntimeError("DEBUG: " + content)
     } catch {
       e =>

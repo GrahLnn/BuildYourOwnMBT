@@ -69,24 +69,24 @@ pub fn Context::new(mod_name : String) -> Context {
   let array_ptr_push_ty = try! llvm_ctx.getFunctionType(llvm_ctx.getVoidTy(), [
     ptrty, ptrty,
   ])
-  let array_int_get_ty = try! llvm_ctx.getFunctionType(i32ty, [ptrty, i32ty])
-  let array_double_get_ty = try! llvm_ctx.getFunctionType(doublety, [
-    ptrty, i32ty,
-  ])
+  // let array_int_get_ty = try! llvm_ctx.getFunctionType(i32ty, [ptrty, i32ty])
+  // let array_double_get_ty = try! llvm_ctx.getFunctionType(doublety, [
+  // ptrty, i32ty,
+  // ])
   let array_bool_get_ty = try! llvm_ctx.getFunctionType(boolty, [ptrty, i32ty])
-  let array_ptr_get_ty = try! llvm_ctx.getFunctionType(ptrty, [ptrty, i32ty])
-  let array_int_put_ty = try! llvm_ctx.getFunctionType(voidty, [
-    ptrty, i32ty, i32ty,
-  ])
+  // let array_ptr_get_ty = try! llvm_ctx.getFunctionType(ptrty, [ptrty, i32ty])
+  // let array_int_put_ty = try! llvm_ctx.getFunctionType(voidty, [
+  //   ptrty, i32ty, i32ty,
+  // ])
   let array_double_put_ty = try! llvm_ctx.getFunctionType(voidty, [
     ptrty, i32ty, doublety,
   ])
   let array_bool_put_ty = try! llvm_ctx.getFunctionType(voidty, [
     ptrty, i32ty, boolty,
   ])
-  let array_ptr_put_ty = try! llvm_ctx.getFunctionType(voidty, [
-    ptrty, i32ty, ptrty,
-  ])
+  // let array_ptr_put_ty = try! llvm_ctx.getFunctionType(voidty, [
+  //   ptrty, i32ty, ptrty,
+  // ])
   let make_int_array = try! llvm_mod.addFunction(
     make_int_array_ty, "minimbt_create_array",
   )

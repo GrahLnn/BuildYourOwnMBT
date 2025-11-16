@@ -76,22 +76,35 @@
 ///|
 test "Codegen Closure Test" {
   let code =
-    #|fn is_even(n : Int) -> Bool {
-    #|  if n == 0 {
-    #|    true
-    #|  } else {
-    #|    is_odd(n - 1)
-    #|  }
+    #|enum Color {
+    #|  Red;
+    #|  Green;
+    #|  Blue;
+    #|  RGB(Int, Int, Int)
     #|}
-    #|fn is_odd(n : Int) -> Bool {
-    #|  if n == 0 {
-    #|    false
-    #|  } else {
-    #|    is_even(n - 1)
+    #|fn rgb(color: Color) -> (Int, Int, Int) {
+    #|  match color {
+    #|    Red => (255, 0, 0);
+    #|    Green => (0, 255, 0);
+    #|    Blue => (0, 0, 255);
+    #|    RGB(r, g, b) => (r, g, b);
     #|  }
     #|}
     #|fn main {
-    #|  let result = is_even(10)
+    #|  let red = Red;
+    #|  let green = Green;
+    #|  let blue = Blue;
+    #|  let black = RGB(0, 0, 0);
+    #|  let (r, _, _) = rgb(red);
+    #|  let (_, g, _) = rgb(green);
+    #|  let (_, _, b) = rgb(blue);
+    #|  let (r1, g1, b1) = rgb(black);
+    #|  print_int(r);
+    #|  print_int(g);
+    #|  print_int(b);
+    #|  print_int(r1);
+    #|  print_int(g1);
+    #|  print_int(b1);
     #|}
   let tokens = @lexer.tokenize(code)
   let ast = @parser.parse(tokens)

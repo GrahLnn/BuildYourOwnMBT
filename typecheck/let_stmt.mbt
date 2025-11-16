@@ -64,13 +64,7 @@ fn Context::bind_pattern_type(
           guard t.length() == patterns.length() else {
             raise TypeCheckError("Pattern and type mismatch")
           }
-          loop patterns[:] {
-            [p, .. rest] => {
-              self.bind_pattern_type(p, t[0])
-              continue rest
-            }
-            [] => break
-          }
+          patterns.eachi((idx, pat) => self.bind_pattern_type(pat, t[idx]))
         }
         _ => raise TypeCheckError("Should be a tuple type")
       }
