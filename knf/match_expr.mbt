@@ -73,7 +73,7 @@ pub fn Context::match_arm_to_knf(
       let name = self.add_temp(Double)
       binders.push(Let(name, Double, Double(n)))
     }
-    _ => raise KnfTransformError("not impl for \{arm.pattern.kind}")
+    _ => raise KnfTransformError("match not impl for \{arm.pattern.kind}")
   }
   let (stmts, arm) = self.expr_to_knf(arm.body)
   binders.append(stmts)
