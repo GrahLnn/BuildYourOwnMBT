@@ -136,3 +136,29 @@ test "Codegen cls-bug Test" {
   let llvm_mod = codegen(knf_prog)
   println(llvm_mod)
 }
+
+///|
+test {
+  let code =
+    #|fn inprod(v1: Array[Double], v2: Array[Double], len: Int) -> Double {
+    #|  let mut res : Double = 0.0;
+    #|  let mut idx = 0;
+    #|  while idx < len {
+    #|    res = res + v1[idx] * v2[idx];
+    #|    idx = idx + 1;
+    #|  }
+    #|  res
+    #|}
+    #|fn main {
+    #|  let v1 = Array::make(3, 1.23);
+    #|  let v2 = Array::make(3, 4.56);
+    #|  print_int(truncate(1000000.0 * inprod(v1, v2, 3)))
+    #|}
+  let tokens = @lexer.tokenize(code)
+  let ast = @parser.parse(tokens)
+  let typed_ast = @typecheck.typecheck(ast)
+  let knf_prog = @knf.knf_transform(typed_ast)
+  println(knf_prog)
+  let llvm_mod = codegen(knf_prog)
+  println(llvm_mod)
+}
