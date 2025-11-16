@@ -1,7 +1,7 @@
 ///|
 pub fn typecheck(program : @parser.Program) -> Program raise TypeCheckError {
   let ctx = Context::new()
-  
+
   // 注册所有内置函数
   let builtins : Array[(String, TypeKind)] = [
     ("print_int", Function([Int], Unit)),
@@ -26,14 +26,15 @@ pub fn typecheck(program : @parser.Program) -> Program raise TypeCheckError {
     ("array_double_put", Function([Array(Double), Int, Double], Unit)),
     ("array_bool_put", Function([Array(Bool), Int, Bool], Unit)),
     ("array_ptr_put", Function([Array(Any), Int, Any], Unit)),
+    ("int_of_float", Function([Double], Int)),
+    ("float_of_int", Function([Int], Double)),
+    ("truncate", Function([Double], Double)),
   ]
-  
   builtins.each(fn(item) {
     let (name, ty) = item
     ctx.type_env.set(name, Type::{ kind: ty, mutable: false })
     ctx.func_types.set(name, ty)
   })
-  
   let checked_program = ctx.check_program(program)
   ctx.substitute_type_var(checked_program)
 }
@@ -50,5 +51,10 @@ pub fn Context::substitute_type_var(
     n,
     self.substitute_top_function(e),
   ))
-  Program::{ top_lets, top_functions, struct_defs: program.struct_defs }
+  Program::{
+    top_lets,
+    top_functions,
+    struct_defs: program.struct_defs,
+    enum_defs: program.enum_defs,
+  }
 }

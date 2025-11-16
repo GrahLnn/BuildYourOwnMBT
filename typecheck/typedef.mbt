@@ -38,12 +38,14 @@ pub fn Context::check_parser_typekind(
         param_types.map(typekind => self.check_parser_typekind(typekind)),
         self.check_parser_typekind(return_type),
       )
-    Defined(name) => {
-      guard self.struct_defs.contains(name) else {
+    Defined(name) =>
+      if self.struct_defs.contains(name) {
+        Struct(name)
+      } else if self.enum_defs.contains(name) {
+        Struct(name)
+      } else {
         raise TypeCheckError("Struct \{name} not defined")
       }
-      Struct(name)
-    }
   }
 }
 

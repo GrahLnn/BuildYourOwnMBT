@@ -37,6 +37,7 @@ pub(all) struct Context {
   mut type_env : Env
   type_vars : Map[Int, TypeKind]
   struct_defs : Map[String, StructDef]
+  enum_defs : Map[String, @parser.EnumDef]
   func_types : Map[String, TypeKind]
   mut current_func_ret_ty : TypeKind?
 }
@@ -47,6 +48,7 @@ pub fn Context::new() -> Context {
     type_env: Env::new(),
     type_vars: Map::new(),
     struct_defs: Map::new(),
+    enum_defs: Map::new(),
     func_types: Map::new(),
     current_func_ret_ty: None,
   }
@@ -90,6 +92,7 @@ pub(all) struct Program {
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
   struct_defs : Map[String, StructDef]
+  enum_defs : Map[String, @parser.EnumDef]
 } derive(Show)
 
 ///|
@@ -97,6 +100,7 @@ pub fn Context::check_program(
   self : Context,
   program : @parser.Program,
 ) -> Program raise TypeCheckError {
+  program.enum_defs.each((n, e) => self.enum_defs.set(n, e))
   self.collect_struct_names(program)
   self.collect_top_lets(program)
   self.collect_function_types(program)
@@ -105,6 +109,8 @@ pub fn Context::check_program(
     n,
     self.check_struct_def(s),
   ))
+  let enum_defs = Map::new()
+  program.enum_defs.each((n, e) => enum_defs.set(n, e))
   let top_functions = Map::new()
   program.top_functions.each((n, s) => top_functions.set(
     n,
@@ -112,7 +118,7 @@ pub fn Context::check_program(
   ))
   let top_lets = Map::new()
   program.top_lets.each((n, s) => top_lets.set(n, self.check_top_let(s)))
-  Program::{ top_lets, top_functions, struct_defs }
+  Program::{ top_lets, top_functions, struct_defs, enum_defs }
 }
 
 ///|
