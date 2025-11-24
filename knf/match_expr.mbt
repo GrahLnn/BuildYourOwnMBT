@@ -28,11 +28,12 @@ pub fn Context::match_expr_to_knf(
   self : Context,
   match_expr : @typecheck.MatchExpr,
 ) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError {
-  let expr_ty = self.typekind_to_knf(match_expr.ty)
+  // scrutinee 的 KNF 类型来自 match_expr.expr.ty，而不是整个 match 的返回类型
+  let scr_ty = self.typekind_to_knf(match_expr.expr.ty)
   let (stmts, expr) = self.expr_to_knf(match_expr.expr)
   let arms = Array::new()
   match_expr.arms.each(arm => arms.push(
-    self.match_arm_to_knf(arm, expr_ty, expr),
+    self.match_arm_to_knf(arm, scr_ty, expr),
   ))
   (stmts, Match(expr, arms))
 }
@@ -64,58 +65,57 @@ fn Context::bind_pattern_binders(
   binders : Array[KnfStmt],
 ) -> Unit raise KnfTransformError {
   match pat.kind {
-    // `_` 这种. 理论上可以完全不建 binder. 也可以给一个 dummy 变量.
-    Wildcard =>
-      // 可选. 当前结构里 KNF 没有用到 `_` 变量. 可以直接跳过不生成 binder
-      ()
+    // `_` 模式. 不引入名字, 也不需要绑定 scr_expr.
+    Wildcard => ()
 
-    // `x` 模式. 直接把 scr_expr 绑定到新名字上
+    // `x` 模式. 把 scr_expr 作为真实 RHS 绑定到新名字上.
     Ident(n) => {
       let name = self.add_new_name(n, scr_ty)
       binders.push(Let(name, scr_ty, scr_expr))
     }
 
-    // `(p1, p2, ...)` 模式. 这里只做“包装”. 不拆 tuple. 真正的拆解留到 codegen.
-    // 也就是说. 这里只要保证变量名都注册到 Env 就行.
-    Tuple(sub_pats) =>
-      // 当前不拆 tuple. 只给里边的 Ident 做 env 注册
-      sub_pats.each(sp => self.bind_pattern_binders_shallow(sp, binders))
-
-    // 常量模式. Bool/Int/Double. 不引入新变量. 也不在这里生成条件.
-    Bool(_) | Int(_) | Double(_) =>
-      // 完全留给 codegen 去根据 pattern 做比较
-      ()
-
-    // Enum 模式. 同样只负责变量名的 env 注册. 不做 tag 检查.
-    Enum(_, _, field_pats_opt) =>
-      match field_pats_opt {
-        Some(field_pats) =>
-          // 这里只负责把 RGB(r, g, b) 里 r g b 这些名字丢进 env
-          field_pats.each(sp => self.bind_pattern_binders_shallow(sp, binders))
-        None => ()
+    // `(p1, p2, ...)` 模式. 在 KNF 里显式做 tuple 投影, 为子模式递归生成绑定.
+    Tuple(sub_pats) => {
+      guard scr_ty is Tuple(elem_tys) else {
+        raise KnfTransformError("Tuple pattern on non-tuple type: \{scr_ty}")
       }
-  }
-}
-
-///|
-fn Context::bind_pattern_binders_shallow(
-  self : Context,
-  pat : @typecheck.ArmPattern,
-  binders : Array[KnfStmt],
-) -> Unit raise KnfTransformError {
-  match pat.kind {
-    Wildcard => ()
-    Ident(n) => {
-      // 没有 scr_expr. 也就没真正的 RHS. 这里只注册名字进 Env. 方便后面 body 里的名字解析.
-      // 这种做法意味着 body 里使用这些名字会 RE. 正常情况下应该有拆解逻辑.
-      let tmp_ty = Type::Unit
-      let name = self.add_new_name(n, tmp_ty)
-      // 这里不生成 Let. 否则需要一个 KnfExpr 做 RHS
-      let _ = name
-
+      // 先把 scr_expr 绑定到一个临时名字, 避免重复使用复杂表达式.
+      let tmp = self.add_temp(scr_ty)
+      binders.push(Let(tmp, scr_ty, scr_expr))
+      sub_pats.eachi((i, sp) => {
+        let elem_ty = elem_tys[i]
+        let elem_expr = TupleAccess(tmp, i)
+        self.bind_pattern_binders(sp, elem_ty, elem_expr, binders)
+      })
     }
-    Tuple(sub_pats) =>
-      sub_pats.each(sp => self.bind_pattern_binders_shallow(sp, binders))
-    Bool(_) | Int(_) | Double(_) | Enum(_, _, _) => ()
+
+    // 常量模式. Bool/Int/Double 只参与后续 codegen 的比较, 这里不引入任何绑定.
+    Bool(_) | Int(_) | Double(_) => ()
+
+    // Enum 模式. 为 enum 整体和 payload 字段生成投影绑定.
+    Enum(enum_name_opt, variant_name, field_pats_opt) =>
+      match field_pats_opt {
+        None => {
+          // 零字段变体: 仍然为整个 enum 绑定一个 tmp, 方便后续 codegen 获取类型信息.
+          let tmp = self.add_temp(scr_ty)
+          binders.push(Let(tmp, scr_ty, scr_expr))
+        }
+        Some(field_pats) => {
+          let (field_tys, variant_index) = self.lookup_enum_variant_field_types(
+            scr_ty, enum_name_opt, variant_name,
+          )
+
+          // 先绑定整个 enum 值到一个 tmp 名字
+          let tmp = self.add_temp(scr_ty)
+          binders.push(Let(tmp, scr_ty, scr_expr))
+
+          // 为每个字段生成 EnumPayload 投影, 再递归绑定子模式
+          field_pats.eachi((i, sp) => {
+            let field_ty = field_tys[i]
+            let field_expr = EnumPayload(tmp, variant_index, i)
+            self.bind_pattern_binders(sp, field_ty, field_expr, binders)
+          })
+        }
+      }
   }
 }

@@ -70,11 +70,17 @@ pub(all) struct Context {
   mut name_env : Env
   capture : Array[Name]
   globals : Map[String, Type]
+  enum_defs : Map[String, KnfEnumDef]
 }
 
 ///|
 pub fn Context::new() -> Context {
-  Context::{ name_env: Env::new(), capture: Array::new(), globals: Map::new() }
+  Context::{
+    name_env: Env::new(),
+    capture: Array::new(),
+    globals: Map::new(),
+    enum_defs: Map::new(),
+  }
 }
 
 ///|

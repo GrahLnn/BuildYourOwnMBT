@@ -45,16 +45,22 @@ pub fn knf_transform(
   context.globals.set("sin", Function([Double], Double))
   context.globals.set("cos", Function([Double], Double))
   context.globals.set("atan", Function([Double], Double))
-  prog.enum_defs.each((ename, edef) => edef.variants.each(variant => {
-    let vname = variant.name
-    // variant.fields 是 Array[@typecheck.Type]
-    let field_tys = variant.fields.map(ft => context.type_to_knf(ft))
-    let ctor_ty = match field_tys.length() {
-      0 => Struct(ename)
-      _ => Function(field_tys, Struct(ename))
-    }
-    context.globals.set(vname, ctor_ty)
-  }))
+  // 先把所有枚举定义转换成 KNF 版本并缓存到 Context::enum_defs
+  prog.enum_defs.each((ename, edef) => {
+    let knf_edef = context.enum_def_to_knf(edef)
+    context.enum_defs.set(ename, knf_edef)
+
+    // 同时为每个枚举变体在 globals 里注册一个构造器类型
+    knf_edef.variants.each(variant => {
+      let vname = variant.name
+      let field_tys = variant.fields
+      let ctor_ty = match field_tys.length() {
+        0 => Enum(ename)
+        _ => Function(field_tys, Enum(ename))
+      }
+      context.globals.set(vname, ctor_ty)
+    })
+  })
   context.program_to_knf(prog)
 }
 

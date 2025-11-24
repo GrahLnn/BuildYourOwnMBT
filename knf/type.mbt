@@ -7,7 +7,7 @@ pub(all) enum Type {
   String
   Array(Type)
   Struct(String)
-  Enum(String, Array[Type])
+  Enum(String)
   Tuple(Array[Type])
   Function(Array[Type], Type)
 }
@@ -22,13 +22,7 @@ pub impl Show for Type with output(self, logger) {
     String => "String"
     Array(elem_type) => "Array[\{elem_type}]"
     Struct(name) => "\{name}"
-    Enum(name, type_args) =>
-      if type_args.is_empty() {
-        "\{name}"
-      } else {
-        let arg_str = type_args.map(t => "\{t}").join(", ")
-        "\{name}[\{arg_str}]"
-      }
+    Enum(name) => "\{name}"
     Tuple(elem_types) => {
       let elem_strs = elem_types.map(et => "\{et}").join(", ")
       "(\{elem_strs})"
@@ -54,7 +48,7 @@ pub fn Context::typekind_to_knf(
     String => String
     Array(elem_type) => Array(self.typekind_to_knf(elem_type))
     Struct(name) => Struct(name)
-    // Enum(name) => Enum(name)
+    Enum(name) => Enum(name)
     Tuple(elem_types) => Tuple(elem_types.map(et => self.typekind_to_knf(et)))
     Function(param_types, ret_type) =>
       Function(

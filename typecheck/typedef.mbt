@@ -15,6 +15,7 @@ pub(all) enum TypeKind {
   Array(TypeKind)
   Function(Array[TypeKind], TypeKind)
   Struct(String)
+  Enum(String)
   Any
   TypeVar(Int)
 } derive(Hash)
@@ -42,7 +43,7 @@ pub fn Context::check_parser_typekind(
       if self.struct_defs.contains(name) {
         Struct(name)
       } else if self.enum_defs.contains(name) {
-        Struct(name)
+        Enum(name)
       } else {
         raise TypeCheckError("Struct \{name} not defined")
       }
@@ -186,6 +187,9 @@ pub fn Context::is_type_compatible(
     (Double, Double) => true
     (String, String) => true
     (Struct(a), Struct(b)) => a == b
+    (Enum(a), Enum(b)) => a == b
+    (Struct(a), Enum(b)) => a == b
+    (Enum(a), Struct(b)) => a == b
     _ => false
   }
 }
@@ -368,6 +372,7 @@ pub impl Show for TypeKind with output(self, logger) {
       "(\{params}) -> \{return_type.to_string()}"
     }
     Struct(name) => "\{name}"
+    Enum(name) => "\{name}"
     Any => "Any"
     TypeVar(name) => "TypeVar(\{name})"
   }

@@ -628,12 +628,6 @@ fn Context::make_array(
         [size, init],
       )
       |> Some
-    // Bool =>
-    //   self.builder.createCall(
-    //     self.builtin_funcs.get("make_bool_array").unwrap(),
-    //     [size, init],
-    //   )
-    //   |> Some
     _ =>
       self.builder.createCall(
         self.builtin_funcs.get("make_ptr_array").unwrap(),
